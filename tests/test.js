@@ -351,6 +351,34 @@ test('markers mode does not touch a markdown-only badge', () => {
   assert.strictEqual(found, false);
 });
 
+test('link is added around a bare badge when badge-link is set', () => {
+  const linked = generateBadgeMarkdown('https://x', 'Vibe Index', 'https://repo');
+  // markdown discovery on a bare placeholder
+  assert.strictEqual(
+    replaceBadge('![Vibe Index]()', linked, 'markdown').content,
+    '[![Vibe Index](https://x)](https://repo)'
+  );
+  // markers discovery wraps too
+  assert.ok(
+    replaceBadge('<!-- vibe-index:start -->![Vibe Index]()<!-- vibe-index:end -->', linked, 'markers')
+      .content.includes('[![Vibe Index](https://x)](https://repo)')
+  );
+});
+
+test('link is removed around a linked badge when badge-link is empty', () => {
+  const bare = generateBadgeMarkdown('https://x', 'Vibe Index', '');
+  // markdown discovery on a link-wrapped badge -> bare
+  assert.strictEqual(
+    replaceBadge('[![Vibe Index](https://o/old)](https://o/lnk)', bare, 'markdown').content,
+    '![Vibe Index](https://x)'
+  );
+  // markers discovery unwraps too
+  assert.ok(
+    !replaceBadge('<!-- vibe-index:start -->[![Vibe Index](https://o/old)](https://o/lnk)<!-- vibe-index:end -->', bare, 'markers')
+      .content.includes('](https://o/lnk)')
+  );
+});
+
 test('auto prefers markers, falls back to markdown', () => {
   // markers present -> use them
   const withMarkers = `${START_MARKER}${END_MARKER}\n\n![Vibe Index](old.svg)`;

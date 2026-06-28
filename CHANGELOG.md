@@ -36,7 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   URI. Set `badge-logo` to a simple-icons slug for a different logo, or empty
   for none.
 - `badge-link` input (default: the Vibe Index repository URL) wraps the badge in
-  a link so readers can learn what the metric means; set empty to disable.
+  a link so readers can learn what the metric means; set empty to disable. The
+  link wrapper is added or removed in place to match `badge-link` on every run —
+  a bare `![Vibe Index]()` gets wrapped, and a linked badge is unwrapped when the
+  link is disabled.
 - Built-in auto-commit: `commit`/`push` inputs (with `commit-message`,
   `commit-user-name`, `commit-user-email`) let the action commit and push the
   updated badge files itself, before the assertion, so no separate
