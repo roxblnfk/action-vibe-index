@@ -5,7 +5,11 @@
 <!-- vibe-index:end -->
 
 <p align="center">
-  <img src="docs/vibe-scale.svg" alt="Vibe Index scale: 0 means hand-crafted by a human, 10 means fully written by AI" width="680">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/vibe-scale-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/vibe-scale.svg">
+    <img src="docs/vibe-scale.svg" alt="Vibe Index scale: 0 means hand-crafted by a human, 10 means fully written by AI" width="680">
+  </picture>
 </p>
 
 **The higher the score, the more of your code was written by AI.**
@@ -188,7 +192,11 @@ With `badge-color: auto` (the default), the badge color is interpolated along a
 **continuous green → festive purple gradient** at the exact score — green for
 hand-crafted, purple for fully AI/vibe-coded:
 
-![Vibe Index scale](docs/vibe-scale.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/vibe-scale-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/vibe-scale.svg">
+  <img src="docs/vibe-scale.svg" alt="Vibe Index scale" width="680">
+</picture>
 
 The ramp runs through `#27ae60` → `#1abc9c` → `#3498db` → `#6c5ce7` → `#8a2be2`.
 Set `badge-color` to a fixed hex or named color to opt out of auto-coloring.
