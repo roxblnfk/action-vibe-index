@@ -104,6 +104,10 @@ async function run() {
       }
     }
 
+    // IMPORTANT: the assertion must stay last. All side effects (outputs, the
+    // badge file, and the README updates above) must run *before* it, so the
+    // badge is always refreshed even when the score is out of range and the
+    // action fails.
     if (assertIndex) {
       const { min, max } = assertIndex;
       if (vibeIndex < min || vibeIndex > max) {

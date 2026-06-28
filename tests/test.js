@@ -1,4 +1,7 @@
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
 
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
@@ -254,6 +257,42 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
   assert.strictEqual(result.validated.badgeLogo, 'github');
   assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);
+});
+
+console.log('integration (action entry point)');
+
+test('badge is updated even when the assertion fails', () => {
+  const repoRoot = path.join(__dirname, '..');
+  const tmpFile = path.join(__dirname, '.tmp-assert-target.md');
+  const placeholder = '![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=PLACEHOLDER&color=lightgrey)';
+  fs.writeFileSync(tmpFile, `# Tmp\n${START_MARKER}\n${placeholder}\n${END_MARKER}\n`);
+
+  let status = 0;
+  try {
+    // assert-index 10.0-10.0 fails for any repo that isn't 100% human, which
+    // forces the failure path; the badge must still be written first.
+    execFileSync('node', ['src/index.js'], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        'INPUT_COMMITS-COUNT': '50',
+        'INPUT_ASSERT-INDEX': '10.0-10.0',
+        'INPUT_UPDATE-FILES': tmpFile,
+      },
+      stdio: 'ignore',
+    });
+  } catch (err) {
+    status = err.status;
+  }
+
+  try {
+    const content = fs.readFileSync(tmpFile, 'utf-8');
+    assert.strictEqual(status, 1, 'action should fail the assertion (exit 1)');
+    assert.ok(!content.includes('PLACEHOLDER'), 'badge was updated despite the failure');
+    assert.ok(content.includes('shields.io/static/v1'), 'a real badge URL is present');
+  } finally {
+    fs.unlinkSync(tmpFile);
+  }
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
