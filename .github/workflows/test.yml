@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lower bound from package.json "engines", plus the node24 runtime the
+        # action actually runs on.
+        node-version: ['20', '24']
+    name: Node ${{ matrix.node-version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # No dependencies to install (zero-dep action) and no build step — the
+      # suite is plain Node + the git CLI, which is preinstalled on the runner.
+      - name: Run tests
+        run: npm test
