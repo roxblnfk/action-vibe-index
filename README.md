@@ -43,9 +43,16 @@ The action rewrites whatever is between the markers (an empty pair is fine). On
 their own line you get a standalone badge; placed after other content they keep
 the badge inline — so it also works inside a row of badges.
 
-No markers? You can also just drop an `![Vibe Index](...)` image anywhere and
-set `badge-discovery: markdown` — the action finds it by its alt text and
-refreshes the URL in place. With `auto` (the default) both styles work.
+No markers? Drop this starter line where you want the badge and set
+`badge-discovery: markdown` — the action finds it by its alt text and fills the
+URL in place (the empty link is fine; it's replaced on the first run):
+
+```markdown
+![Vibe Index]()
+```
+
+With `auto` (the default) both the markers and the `![Vibe Index](...)` styles
+work.
 
 ### 2. Run the action
 

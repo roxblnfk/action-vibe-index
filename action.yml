@@ -1,6 +1,6 @@
 name: 'Vibe Index'
 description: 'Measure the ratio of human-written vs AI-generated code and generate a badge'
-author: 'Alexei Gagarin'
+author: 'Aleksei Gagarin'
 
 inputs:
   commits-count:

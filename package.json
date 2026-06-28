@@ -14,7 +14,7 @@
     "vibe-index",
     "badge"
   ],
-  "author": "Alexei Gagarin",
+  "author": "Aleksei Gagarin",
   "license": "BSD-3-Clause",
   "engines": {
     "node": ">=20"
