@@ -1,5 +1,5 @@
 const { execFileSync } = require('child_process');
-const { AI_SIGNATURES } = require('./ai-signatures');
+const { BOT_SIGNATURES } = require('./bot-signatures');
 
 // ASCII control characters used as field/record separators in `git log`
 // output. They never appear in commit messages or identities, so parsing
@@ -13,7 +13,7 @@ const RECORD_SEP = '\x1e'; // Record Separator
  * @param {Object} options
  * @param {number} options.commitsCount - Number of commits to analyze
  * @param {number} options.coAuthorMultiplier - Share of credit given to AI in co-authored commits (0-1)
- * @param {RegExp[]} options.extraPatterns - User regexes merged on top of the built-in AI signatures
+ * @param {RegExp[]} options.extraPatterns - User regexes merged on top of the built-in bot signatures
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzeRepository(options) {
@@ -155,13 +155,13 @@ function parseNumstat(numstat) {
 }
 
 /**
- * Combine the curated, built-in AI signatures with the user's extra regexes.
+ * Combine the curated, built-in bot signatures with the user's extra regexes.
  *
  * @param {RegExp[]} [extraPatterns]
  * @returns {RegExp[]}
  */
 function buildMatchers(extraPatterns = []) {
-  return [...AI_SIGNATURES, ...extraPatterns];
+  return [...BOT_SIGNATURES, ...extraPatterns];
 }
 
 /**

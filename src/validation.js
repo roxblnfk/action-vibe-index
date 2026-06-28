@@ -23,7 +23,7 @@ function validateCoAuthorMultiplier(multiplier) {
 
 function validateExtraPatterns(patterns) {
   // Optional: one regular expression per line, merged on top of the built-in
-  // AI signatures. Newline-separated (not comma) because regexes commonly
+  // bot signatures. Newline-separated (not comma) because regexes commonly
   // contain commas (e.g. quantifiers like "{1,3}"). An empty value is valid
   // and means "use the built-in list only".
   if (!patterns || typeof patterns !== 'string') {
@@ -38,7 +38,7 @@ function validateExtraPatterns(patterns) {
       try {
         return new RegExp(source, 'i');
       } catch (error) {
-        throw new Error(`extra-ai-patterns contains an invalid regular expression: "${source}" (${error.message})`);
+        throw new Error(`extra-bot-patterns contains an invalid regular expression: "${source}" (${error.message})`);
       }
     });
 }

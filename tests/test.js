@@ -173,7 +173,7 @@ test('human co-author is not treated as AI', () => {
   assert.strictEqual(r.classification, 'human');
 });
 
-console.log('ai-signatures (built-in list)');
+console.log('bot-signatures (built-in list)');
 
 test('built-in [bot] signature detects app bot co-authors', () => {
   const message = 'chore: bump deps\n\nCo-Authored-By: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>';
@@ -187,7 +187,7 @@ test('built-in Copilot identity signature', () => {
   assert.strictEqual(r.classification, 'co-authored');
 });
 
-test('extra-ai-patterns extend the built-in list', () => {
+test('extra-bot-patterns extend the built-in list', () => {
   const author = 'Acme Agent <agent@acme-ai.example>';
   const base = classifyCommit({ author, message: 'work', added: 1, removed: 0 }, matchers);
   assert.strictEqual(base.classification, 'human');
@@ -250,7 +250,7 @@ test('co-author-multiplier bounds', () => {
   assert.throws(() => validateCoAuthorMultiplier('-0.1'));
 });
 
-test('extra-ai-patterns: one regex per line, compiled', () => {
+test('extra-bot-patterns: one regex per line, compiled', () => {
   const result = validateExtraPatterns('@acme\\.com\nFooBot\\[bot\\]');
   assert.strictEqual(result.length, 2);
   assert.ok(result[0] instanceof RegExp);
@@ -258,12 +258,12 @@ test('extra-ai-patterns: one regex per line, compiled', () => {
   assert.ok(result[1].test('FooBot[bot] <a@b>'));
 });
 
-test('extra-ai-patterns: empty is allowed', () => {
+test('extra-bot-patterns: empty is allowed', () => {
   assert.deepStrictEqual(validateExtraPatterns(''), []);
   assert.deepStrictEqual(validateExtraPatterns('\n  \n'), []);
 });
 
-test('extra-ai-patterns: invalid regex throws', () => {
+test('extra-bot-patterns: invalid regex throws', () => {
   assert.throws(() => validateExtraPatterns('valid\n([unclosed'), /invalid regular expression/i);
 });
 

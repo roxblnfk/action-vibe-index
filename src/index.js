@@ -13,7 +13,7 @@ async function run() {
     const rawInputs = {
       commitsCount: core.getInput('commits-count') || '500',
       coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.5',
-      extraPatterns: core.getInput('extra-ai-patterns'),
+      extraPatterns: core.getInput('extra-bot-patterns'),
       badgeStyle: core.getInput('badge-style') || 'flat-square',
       badgeColor: core.getInput('badge-color') || DEFAULT_BADGE_COLOR,
       badgeLogo: core.getInput('badge-logo'),
@@ -45,7 +45,7 @@ async function run() {
     core.info('Starting Vibe Index analysis...');
     core.info(`  Commits to analyze: ${commitsCount}`);
     core.info(`  Co-author multiplier: ${coAuthorMultiplier}`);
-    core.info(`  Extra AI patterns: ${extraPatterns.length ? extraPatterns.map(re => re.source).join(', ') : '(none)'}`);
+    core.info(`  Extra bot patterns: ${extraPatterns.length ? extraPatterns.map(re => re.source).join(', ') : '(none)'}`);
 
     const analysis = await analyzeRepository({
       commitsCount,

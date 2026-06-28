@@ -15,7 +15,7 @@ src/
   index.js                    # Entry point (runs in GitHub Actions)
   core.js                     # Dependency-free @actions/core shim (runner protocol)
   analyzer.js                 # Git repository analysis
-  ai-signatures.js            # Versioned, built-in AI/bot detection regexes
+  bot-signatures.js           # Versioned, built-in bot/AI detection regexes
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
   updater.js                  # In-place README badge update (marker-based)
@@ -49,14 +49,14 @@ Analyzes commit history to determine human vs AI authorship.
   `git show`)
 - `classifyCommit(commit, matchers)` - Classifies one commit as
   `human` / `ai` / `co-authored` by matching identities
-- `buildMatchers(extraPatterns)` - Returns the built-in `AI_SIGNATURES`
-  (from `ai-signatures.js`) plus the user's extra regexes
+- `buildMatchers(extraPatterns)` - Returns the built-in `BOT_SIGNATURES`
+  (from `bot-signatures.js`) plus the user's extra regexes
 
-**Built-in signatures (`ai-signatures.js`):** a curated, versioned list of
+**Built-in signatures (`bot-signatures.js`):** a curated, versioned list of
 regexes anchored to identities (vendor email domains like `@anthropic.com`,
-GitHub App `[bot]` accounts, the Copilot agent identity, …) maintained with the
-action. Users extend — not replace — it via the `extra-ai-patterns` input
-(one regex per line).
+GitHub App `[bot]` accounts, the Copilot agent identity, …) covering both AI
+agents and automation bots, maintained with the action. Users extend — not
+replace — it via the `extra-bot-patterns` input (one regex per line).
 
 **AI Detection Logic (identity-based, case-insensitive):**
 - Matching is done against the commit author identity and each `Co-Authored-By:`
@@ -121,7 +121,7 @@ Orchestrates the analysis and outputs results.
 |-----------|------|---------|---------|
 | `commits-count` | Number | 500 | How many recent commits to analyze |
 | `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
-| `extra-ai-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
+| `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | 3498db | Badge color (hex); auto-picked from score when left at default |
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
@@ -264,7 +264,7 @@ Tests verify:
 
 - Keep Node.js version updated with GitHub Actions LTS
 - Monitor shields.io API changes
-- Update `src/ai-signatures.js` as new AI tools/bots emerge (bump "Last reviewed")
+- Update `src/bot-signatures.js` as new AI tools/bots emerge (bump "Last reviewed")
 - Collect user feedback on weighting formula
 
 ## License

@@ -30,9 +30,9 @@ message, so a human who merely mentions an AI tool, or who happens to be named
 2. **Co-authored with AI**: a `Co-Authored-By:` identity is an AI → credit is
    split with a configurable multiplier (0.0-1.0), giving partial credit to the human
 
-The built-in signature list lives in [`src/ai-signatures.js`](src/ai-signatures.js)
+The built-in signature list lives in [`src/bot-signatures.js`](src/bot-signatures.js)
 and is expanded in new releases. To detect tools specific to your team, add your
-own regexes via `extra-ai-patterns` — they are merged on top of the built-in list.
+own regexes via `extra-bot-patterns` — they are merged on top of the built-in list.
 
 ## 🚀 Usage
 
@@ -129,7 +129,7 @@ Prevent merging if Vibe Index drops below a threshold:
 |-------|----------|---------|-------------|
 | `commits-count` | No | `500` | Number of recent commits to analyze |
 | `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
-| `extra-ai-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in AI signatures |
+| `extra-bot-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in bot/AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `3498db` | Badge color (hex without `#` or color name). When left at the default, the color is picked automatically from the score |
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
@@ -234,14 +234,14 @@ Where:
 
 ### Custom Signatures
 
-The built-in signatures already cover the common tools. Use `extra-ai-patterns`
-(one regex per line, matched against commit identities) to add tools specific to
-your team — they are merged with the built-in list:
+The built-in signatures already cover the common tools. Use `extra-bot-patterns`
+(one regex per line, matched against commit identities) to add agents or
+automation bots specific to your team — they are merged with the built-in list:
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    extra-ai-patterns: |
+    extra-bot-patterns: |
       @acme-ai\.example\b
       \bInternalLLM\b
 ```
