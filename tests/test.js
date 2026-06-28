@@ -127,6 +127,15 @@ test('color is interpolated along the green->purple gradient', () => {
   assert.strictEqual(getColorForIndex(99), '8a2be2');
 });
 
+test('color is quantized to the displayed 0.1 step (no churn at equal scores)', () => {
+  // Two raw indices that round to the same shown number must share a color, so
+  // the badge isn't repainted while the number reads identical.
+  assert.strictEqual(getColorForIndex(7.41), getColorForIndex(7.4));
+  assert.strictEqual(getColorForIndex(7.449), getColorForIndex(7.4));
+  // A different shown number gets a different color.
+  assert.notStrictEqual(getColorForIndex(7.4), getColorForIndex(7.5));
+});
+
 test('description by score (higher = more AI)', () => {
   assert.strictEqual(getDescriptionForIndex(9), 'AI-Heavy');
   assert.strictEqual(getDescriptionForIndex(0), 'Hand-Crafted');

@@ -57,7 +57,12 @@ const GRADIENT_STOPS = [
  * @returns {string} 6-digit hex color (no '#')
  */
 function getColorForIndex(vibeIndex) {
-  const t = Math.max(0, Math.min(1, vibeIndex / 10));
+  // Quantize to the same 0.1 step the badge displays (`toFixed(1)`), so the
+  // color is a pure function of the shown number. Without this, a tiny shift in
+  // the raw ratios repaints the badge a slightly different shade while the
+  // number reads identical — needless churn (and auto-commits) every run.
+  const quantized = Math.round(vibeIndex * 10) / 10;
+  const t = Math.max(0, Math.min(1, quantized / 10));
 
   let lo = GRADIENT_STOPS[0];
   let hi = GRADIENT_STOPS[GRADIENT_STOPS.length - 1];

@@ -82,10 +82,12 @@ Higher = more AI/vibe: 10.0 = fully AI, 0.0 = fully hand-written (AI-less).
 - 60%: Code lines (lines added/removed)
 - 40%: Commits (commit authorship)
 
-**Color (continuous gradient, higher = more AI):** `getColorForIndex` interpolates
-along a green → festive purple ramp at the exact score
-(`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`). Used when `badge-color: auto`
-(the default); the same stops back the gradient in `docs/vibe-scale.svg`.
+**Color (gradient, higher = more AI):** `getColorForIndex` interpolates along a
+green → festive purple ramp (`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`).
+The score is quantized to the displayed `0.1` step before interpolating, so the
+color is a pure function of the shown number (no badge churn when the number is
+unchanged). Used when `badge-color: auto` (the default); the same stops back the
+gradient in `docs/vibe-scale.svg`.
 
 #### 3. **badge.js** - Badge Generation
 Generates shields.io URLs and markdown using the `static/v1` endpoint, so the

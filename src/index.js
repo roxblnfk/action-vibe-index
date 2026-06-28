@@ -84,7 +84,8 @@ async function run() {
     const badgeMessage = score === '10.0' ? '10' : score;
 
     // "auto" (the default) picks a color from the green->purple gradient at the
-    // exact score; any explicit color is used as-is.
+    // displayed score (getColorForIndex quantizes to the 0.1 step); any explicit
+    // color is used as-is.
     const finalBadgeColor = badgeColor === 'auto'
       ? getColorForIndex(vibeIndex)
       : badgeColor;

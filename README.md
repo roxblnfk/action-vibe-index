@@ -238,9 +238,11 @@ score is always `0.0`–`10.0`:
 ### Badge color
 
 With `badge-color: auto` (the default) the color is interpolated along a
-continuous green → festive purple ramp at the exact score
+green → festive purple ramp
 (`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`) — green for hand-crafted,
-purple for fully vibe-coded. Set a fixed hex or named color to opt out.
+purple for fully vibe-coded. The color tracks the displayed score (quantized to
+the same `0.1` step), so it only changes when the number does. Set a fixed hex
+or named color to opt out.
 
 ## 🐛 Troubleshooting
 
