@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `co-author-multiplier` default changed from `0.5` to `0.8` (an AI co-authored
+  commit is now credited 80% to AI by default).
 - **Badge color is now a continuous green → festive purple gradient** instead of
   5 discrete buckets: `getColorForIndex` interpolates the exact color from the
   score (`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`). The `badge-color`

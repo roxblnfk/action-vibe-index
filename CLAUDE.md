@@ -65,7 +65,7 @@ replace — it via the `extra-bot-patterns` input (one regex per line).
 - AI (checked first): the author identity matches a signature → fully AI.
 - Co-authored: a human author with an AI `Co-Authored-By:` identity → credit
   split by the multiplier (lines AND commit count). Example: 100 lines,
-  multiplier 0.5 → 50 AI + 50 human, and 0.5/0.5 of the commit.
+  multiplier 0.8 → 80 AI + 20 human, and 0.8/0.2 of the commit.
 - Human: neither matches.
 
 #### 2. **calculator.js** - Vibe Index Calculation
@@ -117,7 +117,7 @@ Orchestrates the analysis and outputs results.
 | Parameter | Type | Default | Purpose |
 |-----------|------|---------|---------|
 | `commits-count` | Number | 500 | How many recent commits to analyze |
-| `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
+| `co-author-multiplier` | Float (0-1) | 0.8 | Share of an AI co-authored commit credited to AI |
 | `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | auto | `auto` interpolates from the gradient by score; or a fixed hex / named color |
@@ -192,7 +192,7 @@ Prevent merging if human code percentage drops:
 
 2. **Co-author Multiplier**
    - Allows partial credit for collaborative AI work
-   - Default 0.5 means AI gets 50% of credit in co-authored commits
+   - Default 0.8 means AI gets 80% of credit in co-authored commits
    - Customizable for different team philosophies
 
 3. **Recent Commits Only**

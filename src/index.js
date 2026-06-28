@@ -10,7 +10,7 @@ async function run() {
   try {
     const rawInputs = {
       commitsCount: core.getInput('commits-count') || '500',
-      coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.5',
+      coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.8',
       extraPatterns: core.getInput('extra-bot-patterns'),
       badgeStyle: core.getInput('badge-style') || 'flat-square',
       badgeColor: core.getInput('badge-color') || 'auto',

@@ -9,9 +9,9 @@ inputs:
     default: '500'
 
   co-author-multiplier:
-    description: 'Multiplier for co-authored code (0.0 to 1.0, default: 0.5)'
+    description: 'Multiplier for co-authored code (0.0 to 1.0, default: 0.8) — share of an AI co-authored commit credited to AI'
     required: false
-    default: '0.5'
+    default: '0.8'
 
   extra-bot-patterns:
     description: 'Additional regular expressions (one per line) matched against commit author and Co-Authored-By identities, merged on top of the built-in bot/AI signatures. Use to detect agents or automation bots specific to your team, e.g. "@mycorp-bot\.com". Leave empty to use the built-in list only.'

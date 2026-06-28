@@ -57,7 +57,7 @@ Add this action to your workflow:
   id: vibe
   with:
     commits-count: '500'
-    co-author-multiplier: '0.5'
+    co-author-multiplier: '0.8'
     badge-style: 'flat-square'
 ```
 
@@ -141,7 +141,7 @@ Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `commits-count` | No | `500` | Number of recent commits to analyze |
-| `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
+| `co-author-multiplier` | No | `0.8` | Share of an AI co-authored commit credited to AI (0.0-1.0) |
 | `extra-bot-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in bot/AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `auto` | `auto` interpolates a color along the green→purple gradient from the score; or pass a fixed hex (without `#`) / named color |
@@ -221,14 +221,14 @@ ignored. Each commit falls into exactly one of three categories:
 ### Human Commits
 - Neither the author nor any co-author identity matches an AI signature
 
-**Example** with `co-author-multiplier: 0.5`:
+**Example** with `co-author-multiplier: 0.8` (the default):
 ```
 Added 100 lines
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 Results in:
-- 50 lines as AI, 50 lines as human
-- 0.5 of the commit as AI, 0.5 as human
+- 80 lines as AI, 20 lines as human
+- 0.8 of the commit as AI, 0.2 as human
 
 ## 📊 Vibe Index Formula
 
