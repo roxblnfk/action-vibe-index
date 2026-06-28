@@ -1,7 +1,7 @@
 # 🎵 Vibe Index GitHub Action
 
 <!-- vibe-index:start -->
-![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=6.7%2F10.0&color=5a6fe3&style=flat-square)
+[![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=6.7%2F10.0&color=5b6fe3&style=flat-square)](https://github.com/roxblnfk/action-vibe-index)
 <!-- vibe-index:end -->
 
 <p align="center">
