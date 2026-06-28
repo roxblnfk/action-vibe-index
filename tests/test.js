@@ -266,6 +266,23 @@ test('no markers -> no change', () => {
   assert.strictEqual(content, doc);
 });
 
+test('inline markers keep a row of badges on one line', () => {
+  const doc = `![build](b.svg) ${START_MARKER}![old](old.svg)${END_MARKER} ![license](l.svg)`;
+  const { content, updated } = replaceBadge(doc, NEW_BADGE);
+  assert.strictEqual(updated, true);
+  assert.ok(!content.includes('\n'), 'no newline introduced into the row');
+  assert.strictEqual(
+    content,
+    `![build](b.svg) ${START_MARKER}${NEW_BADGE}${END_MARKER} ![license](l.svg)`
+  );
+});
+
+test('block markers keep the badge on its own line', () => {
+  const doc = `# t\n${START_MARKER}\n![old](old.svg)\n${END_MARKER}\ntext`;
+  const { content } = replaceBadge(doc, NEW_BADGE);
+  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge stays on its own line');
+});
+
 console.log('validation');
 
 test('commits-count parsing and bounds', () => {

@@ -72,6 +72,14 @@ whatever is between them):
 <!-- vibe-index:end -->
 ```
 
+The action replaces whatever sits between the markers. Layout is preserved: if
+the markers are on their own lines (above), the badge stays a block; if they are
+**inline**, the badge stays inline — so it works inside a row of badges:
+
+```markdown
+![build](...) <!-- vibe-index:start -->![Vibe Index](...)<!-- vibe-index:end --> ![license](...)
+```
+
 Then let the action keep them up to date and commit the change. The action
 updates `README.md` by default; pass `update-files` to target a different set
 of files:

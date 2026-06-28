@@ -27,7 +27,15 @@ function replaceBadge(content, badgeMarkdown) {
 
   const before = content.slice(0, start + START_MARKER.length);
   const after = content.slice(end);
-  const next = `${before}\n${badgeMarkdown}\n${after}`;
+
+  // Preserve the layout: if the markers were on separate lines (block style),
+  // keep the badge on its own line; if they were inline (e.g. a badge inside a
+  // single row of badges), keep it inline so the row is not broken.
+  const inner = content.slice(start + START_MARKER.length, end);
+  const isBlock = inner.includes('\n');
+  const next = isBlock
+    ? `${before}\n${badgeMarkdown}\n${after}`
+    : `${before}${badgeMarkdown}${after}`;
 
   return { content: next, updated: next !== content };
 }
