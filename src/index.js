@@ -66,6 +66,8 @@ async function run() {
 
     const { vibeIndex, metrics } = calculateVibeIndex(analysis);
     const score = vibeIndex.toFixed(1);
+    // Drop the fractional part for a perfect 10 ("10" reads cleaner than "10.0").
+    const badgeMessage = score === '10.0' ? '10' : score;
 
     // "auto" (the default) picks a color from the green->purple gradient at the
     // exact score; any explicit color is used as-is.
@@ -75,7 +77,7 @@ async function run() {
 
     const badgeUrl = generateBadgeUrl({
       label: includeMessage,
-      message: score,
+      message: badgeMessage,
       style: badgeStyle,
       color: finalBadgeColor,
       logo: badgeLogo,
