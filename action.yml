@@ -29,7 +29,7 @@ inputs:
     default: 'auto'
 
   badge-logo:
-    description: 'Optional logo to show on the badge (a simple-icons slug, e.g. "github")'
+    description: 'Optional logo on the badge: the built-in "sparkles" (AI/magic icon) or any simple-icons slug (e.g. "github")'
     required: false
     default: ''
 

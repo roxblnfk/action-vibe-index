@@ -5,7 +5,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
-const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
+const { generateBadgeUrl, generateBadgeMarkdown, resolveLogo } = require('../src/badge');
 const { analyzeRepository, classifyCommit, buildMatchers } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const { commitChanges } = require('../src/committer');
@@ -150,6 +150,21 @@ test('badge URL uses static/v1 with encoded params', () => {
 test('badge URL includes logo when provided', () => {
   const url = generateBadgeUrl({ label: 'X', message: 'Y', logo: 'github' });
   assert.ok(url.includes('logo=github'), 'logo present');
+});
+
+test('built-in "sparkles" logo resolves to an SVG data URI', () => {
+  const resolved = resolveLogo('sparkles');
+  assert.ok(resolved.startsWith('data:image/svg+xml;base64,'), 'data URI');
+  const svg = Buffer.from(resolved.split(',')[1], 'base64').toString('utf-8');
+  assert.ok(svg.includes('<svg') && svg.includes('<path'), 'decodes back to SVG');
+
+  // case-insensitive; other values pass through as slugs.
+  assert.strictEqual(resolveLogo('SPARKLES'), resolved);
+  assert.strictEqual(resolveLogo('github'), 'github');
+  assert.strictEqual(resolveLogo(''), '');
+
+  const url = generateBadgeUrl({ label: 'X', message: 'Y', logo: 'sparkles' });
+  assert.ok(url.includes('logo=data%3Aimage%2Fsvg'), 'data URI is URL-encoded in the badge URL');
 });
 
 test('markdown image, with and without link', () => {

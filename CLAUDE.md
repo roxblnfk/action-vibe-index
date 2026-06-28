@@ -95,7 +95,7 @@ escaping).
 **Supports:**
 - Custom styles (flat, flat-square, plastic, for-the-badge, social)
 - Custom colors (hex or named)
-- Optional logo (simple-icons slug)
+- Optional logo: built-in `sparkles` (AI/magic data-URI icon) or a simple-icons slug
 - Markdown embedding
 - HTML embedding
 
@@ -122,7 +122,7 @@ Orchestrates the analysis and outputs results.
 | `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | auto | `auto` interpolates from the gradient by score; or a fixed hex / named color |
-| `badge-logo` | String | '' | Optional logo (simple-icons slug) |
+| `badge-logo` | String | '' | Logo: built-in `sparkles` (AI icon) or a simple-icons slug |
 | `badge-link` | String | repo URL | URL the badge links to (defaults to the Vibe Index repo); empty = no link |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
