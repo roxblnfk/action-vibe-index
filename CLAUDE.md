@@ -14,12 +14,14 @@
 
 src/
   index.js                    # Entry point (runs in GitHub Actions)
+  core.js                     # Dependency-free @actions/core shim (runner protocol)
   analyzer.js                 # Git repository analysis
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
+  validation.js               # Input parsing and validation
 
 tests/
-  test.js                     # Simple test suite
+  test.js                     # Assertion-based test suite
 
 action.yml                    # GitHub Action definition
 package.json                  # Node.js dependencies
@@ -38,20 +40,23 @@ Analyzes commit history to determine human vs AI authorship.
 **Key Functions:**
 - `analyzeRepository(options)` - Main analysis function
   - Returns metrics about code lines and commits
-  - Detects AI keywords in commit messages
-  - Handles co-authored commits with multiplier
+  - Applies the co-author multiplier to both lines and commit authorship
 
-- `getRecentCommits(count)` - Fetches last N commits using `git log`
-- `analyzeCommit(commit, aiKeywords)` - Analyzes single commit
-  - Gets line changes via `git show --numstat`
-  - Detects AI keywords
-  - Extracts Co-Authored-By trailers
+- `getRecentCommits(count)` - Fetches last N non-merge commits and their
+  numstat in a single `git log --no-merges --numstat` call (control-character
+  separators make parsing unambiguous; no per-commit `git show`)
+- `classifyCommit(commit, matchers)` - Classifies one commit as
+  `human` / `ai` / `co-authored`
+- `buildKeywordMatchers(keywords)` - Compiles word-boundary, case-insensitive
+  regexes for each keyword
 
-**AI Detection Logic:**
-- Direct AI commits: Keywords like "Claude", "GPT", "AI", "Agent" in message
-- Co-authored: Has `Co-Authored-By:` trailer
-- Co-author multiplier: Splits credit between human and AI
-  - Example: 100 lines, multiplier 0.5 → 50 AI + 50 human
+**AI Detection Logic (whole-word, case-insensitive):**
+- Co-authored (checked first): a `Co-Authored-By:` trailer naming an AI keyword
+  → credit split by the multiplier (lines AND commit count). Example: 100 lines,
+  multiplier 0.5 → 50 AI + 50 human, and 0.5/0.5 of the commit.
+- AI: no AI co-author, but the message contains an AI keyword → fully AI
+- Human: neither of the above
+- Word-boundary matching prevents `AI` matching `available`, `email`, etc.
 
 #### 2. **calculator.js** - Vibe Index Calculation
 Transforms raw metrics into a 0-10 score.
@@ -66,18 +71,23 @@ Vibe Index = (human_code_ratio × 0.6 + human_commits_ratio × 0.4) × 10
 - 40%: Commits (commit authorship)
 
 **Color Mapping:**
-- 8-10: Green (Very Human-Centric)
-- 6-8: Blue (Human-Focused)
-- 4-6: Yellow (Balanced)
-- 2-4: Orange (AI-Assisted)
-- 0-2: Red (AI-Heavy)
+- 8-10: Green (27ae60, Very Human-Centric)
+- 6-8: Blue (3498db, Human-Focused)
+- 4-6: Yellow (f39c12, Balanced)
+- 2-4: Orange (e67e22, AI-Assisted)
+- 0-2: Red (e74c3c, AI-Heavy)
+
+Auto-coloring only applies while `badge-color` is left at its default.
 
 #### 3. **badge.js** - Badge Generation
-Generates shields.io URLs and markdown.
+Generates shields.io URLs and markdown using the `static/v1` endpoint, so the
+label and message are URL-encoded via `URLSearchParams` (no manual dash/slash
+escaping).
 
 **Supports:**
 - Custom styles (flat, flat-square, plastic, for-the-badge, social)
 - Custom colors (hex or named)
+- Optional logo (simple-icons slug)
 - Markdown embedding
 - HTML embedding
 
@@ -103,7 +113,8 @@ Orchestrates the analysis and outputs results.
 | `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
 | `ai-keywords` | String | Claude,GPT,AI,Agent | Keywords to detect AI authorship |
 | `badge-style` | String | flat-square | shields.io style |
-| `badge-color` | String | 3498db | Badge color (hex) |
+| `badge-color` | String | 3498db | Badge color (hex); auto-picked from score when left at default |
+| `badge-logo` | String | '' | Optional logo (simple-icons slug) |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
 | `include-message` | String | Vibe Index | Badge label text |
@@ -120,7 +131,7 @@ Automatically update a badge in README.md after each push to main:
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   id: vibe
-- run: sed -i "s|badge/.*|${{ steps.vibe.outputs.badge-url }}|" README.md
+- run: sed -i "s|https://img.shields.io/static/v1?label=Vibe%20Index[^)\" ]*|${{ steps.vibe.outputs.badge-url }}|g" README.md
 ```
 
 ### 2. **PR Comment**
@@ -170,8 +181,11 @@ Prevent merging if human code percentage drops:
    - Supports multiple styles and colors
    - Works in README, wikis, anywhere markdown is supported
 
-5. **GitHub Actions Native**
-   - No external dependencies beyond Node.js built-ins
+5. **GitHub Actions Native, zero dependencies**
+   - No external dependencies: `src/core.js` implements the small subset of the
+     runner protocol the action needs (inputs via `INPUT_*` env vars, outputs via
+     the `GITHUB_OUTPUT` file). This means the action runs straight from source —
+     no committed `node_modules` and no `ncc`/`dist` bundling step.
    - Direct access to git repository
    - Native outputs for subsequent steps
    - Works in private repositories
@@ -215,9 +229,8 @@ Tests verify:
 
 ## Dependencies
 
-- `@actions/core`: GitHub Actions API
-- `@actions/github`: GitHub REST API client
-- Node.js 20+ (git must be available)
+- None at runtime. The action only uses Node.js built-ins plus the `git` CLI.
+- Node.js 20+ (provided by the `node20` action runtime; `git` must be available)
 
 ## Maintenance
 

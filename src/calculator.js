@@ -40,11 +40,11 @@ function calculateVibeIndex(analysis) {
 
 /**
  * Get color for Vibe Index score
- * 8-10: Green (excellent human ratio)
- * 6-8: Blue (good)
+ * 8-10: Green (very human-centric)
+ * 6-8: Blue (human-focused)
  * 4-6: Yellow (balanced)
- * 2-4: Orange (AI heavy)
- * 0-2: Red (very AI heavy)
+ * 2-4: Orange (AI-assisted)
+ * 0-2: Red (AI-heavy)
  *
  * @param {number} vibeIndex - Score from 0-10
  * @returns {string} Hex color code
@@ -53,8 +53,8 @@ function getColorForIndex(vibeIndex) {
   if (vibeIndex >= 8) return '27ae60'; // Green
   if (vibeIndex >= 6) return '3498db'; // Blue
   if (vibeIndex >= 4) return 'f39c12'; // Yellow
-  if (vibeIndex >= 2) return 'e74c3c'; // Orange
-  return 'c0392b'; // Red
+  if (vibeIndex >= 2) return 'e67e22'; // Orange
+  return 'e74c3c'; // Red
 }
 
 /**

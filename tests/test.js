@@ -1,57 +1,211 @@
+const assert = require('assert');
+
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
+const { classifyCommit, buildKeywordMatchers } = require('../src/analyzer');
+const {
+  validateCommitsCount,
+  validateCoAuthorMultiplier,
+  validateAIKeywords,
+  validateBadgeStyle,
+  validateBadgeColor,
+  validateAssertIndex,
+  validateAllInputs,
+} = require('../src/validation');
 
-// Test calculation
-const mockAnalysis = {
-  humanPercentage: 75,
-  aiPercentage: 25,
-  humanCommitsPercentage: 80,
-  aiCommitsPercentage: 20,
-};
+let passed = 0;
+let failed = 0;
 
-const { vibeIndex, metrics } = calculateVibeIndex(mockAnalysis);
+function test(name, fn) {
+  try {
+    fn();
+    passed++;
+    console.log(`  ok   ${name}`);
+  } catch (error) {
+    failed++;
+    console.error(`  FAIL ${name}`);
+    console.error(`       ${error.message}`);
+  }
+}
 
-console.log('📊 Vibe Index Test Results:');
-console.log('===========================');
-console.log(`Human Code: ${metrics.humanPercentage.toFixed(1)}%`);
-console.log(`AI Code: ${metrics.aiPercentage.toFixed(1)}%`);
-console.log(`Human Commits: ${metrics.humanCommitsPercentage.toFixed(1)}%`);
-console.log(`AI Commits: ${metrics.aiCommitsPercentage.toFixed(1)}%`);
-console.log(`\nVibe Index: ${vibeIndex.toFixed(1)}/10.0`);
-console.log(`Color: #${getColorForIndex(vibeIndex)}`);
-console.log(`Description: ${getDescriptionForIndex(vibeIndex)}`);
+function approx(actual, expected, name) {
+  assert.ok(Math.abs(actual - expected) < 1e-9, `${name}: expected ${expected}, got ${actual}`);
+}
 
-// Test badge generation
-const badgeUrl = generateBadgeUrl({
-  message: 'Vibe Index',
-  value: vibeIndex.toFixed(1),
-  style: 'flat-square',
-  color: getColorForIndex(vibeIndex),
+const DEFAULT_KEYWORDS = ['Claude', 'GPT', 'AI', 'Agent'];
+const matchers = buildKeywordMatchers(DEFAULT_KEYWORDS);
+
+console.log('calculator');
+
+test('100% human -> 10.0', () => {
+  const { vibeIndex } = calculateVibeIndex({
+    humanPercentage: 100,
+    aiPercentage: 0,
+    humanCommitsPercentage: 100,
+    aiCommitsPercentage: 0,
+  });
+  approx(vibeIndex, 10, 'vibeIndex');
 });
 
-console.log(`\nBadge URL: ${badgeUrl}`);
-console.log(`Markdown: ${generateBadgeMarkdown(badgeUrl)}`);
-
-// Test edge cases
-console.log('\n\n📈 Edge Cases:');
-console.log('==============');
-
-const testCases = [
-  { human: 100, aiCode: 0, aiCommits: 0, label: 'Pure human code' },
-  { human: 0, aiCode: 100, aiCommits: 100, label: 'Pure AI code' },
-  { human: 50, aiCode: 50, aiCommits: 50, label: 'Balanced (50/50)' },
-  { human: 80, aiCode: 20, aiCommits: 90, label: 'Human focused (80% code, 90% commits)' },
-];
-
-testCases.forEach(test => {
-  const analysis = {
-    humanPercentage: test.human,
-    aiPercentage: test.aiCode,
-    humanCommitsPercentage: 100 - test.aiCommits,
-    aiCommitsPercentage: test.aiCommits,
-  };
-  const { vibeIndex: index } = calculateVibeIndex(analysis);
-  console.log(`${test.label}: ${index.toFixed(1)}/10.0 (${getDescriptionForIndex(index)})`);
+test('100% AI -> 0.0', () => {
+  const { vibeIndex } = calculateVibeIndex({
+    humanPercentage: 0,
+    aiPercentage: 100,
+    humanCommitsPercentage: 0,
+    aiCommitsPercentage: 100,
+  });
+  approx(vibeIndex, 0, 'vibeIndex');
 });
 
-console.log('\n✅ Tests completed!');
+test('50/50 -> 5.0', () => {
+  const { vibeIndex } = calculateVibeIndex({
+    humanPercentage: 50,
+    aiPercentage: 50,
+    humanCommitsPercentage: 50,
+    aiCommitsPercentage: 50,
+  });
+  approx(vibeIndex, 5, 'vibeIndex');
+});
+
+test('weighting 60/40 (code 80%, commits 30%)', () => {
+  const { vibeIndex } = calculateVibeIndex({
+    humanPercentage: 80,
+    aiPercentage: 20,
+    humanCommitsPercentage: 30,
+    aiCommitsPercentage: 70,
+  });
+  // 0.8 * 0.6 + 0.3 * 0.4 = 0.6 -> 6.0
+  approx(vibeIndex, 6, 'vibeIndex');
+});
+
+test('color mapping by score', () => {
+  assert.strictEqual(getColorForIndex(9), '27ae60');
+  assert.strictEqual(getColorForIndex(7), '3498db');
+  assert.strictEqual(getColorForIndex(5), 'f39c12');
+  assert.strictEqual(getColorForIndex(3), 'e67e22');
+  assert.strictEqual(getColorForIndex(1), 'e74c3c');
+});
+
+test('description by score', () => {
+  assert.strictEqual(getDescriptionForIndex(9), 'Very Human-Centric');
+  assert.strictEqual(getDescriptionForIndex(0), 'AI-Heavy');
+});
+
+console.log('badge');
+
+test('badge URL uses static/v1 with encoded params', () => {
+  const url = generateBadgeUrl({
+    label: 'Vibe Index',
+    message: '8.5/10.0',
+    style: 'flat-square',
+    color: '27ae60',
+  });
+  assert.ok(url.startsWith('https://img.shields.io/static/v1?'), 'base URL');
+  assert.ok(url.includes('label=Vibe+Index') || url.includes('label=Vibe%20Index'), 'label encoded');
+  assert.ok(url.includes('message=8.5%2F10.0'), 'slash in message encoded');
+  assert.ok(url.includes('color=27ae60'), 'color present');
+  assert.ok(url.includes('style=flat-square'), 'style present');
+});
+
+test('badge URL includes logo when provided', () => {
+  const url = generateBadgeUrl({ label: 'X', message: 'Y', logo: 'github' });
+  assert.ok(url.includes('logo=github'), 'logo present');
+});
+
+test('markdown image, with and without link', () => {
+  assert.strictEqual(generateBadgeMarkdown('U', 'Alt'), '![Alt](U)');
+  assert.strictEqual(generateBadgeMarkdown('U', 'Alt', 'L'), '[![Alt](U)](L)');
+});
+
+console.log('analyzer.classifyCommit');
+
+test('plain human commit', () => {
+  const r = classifyCommit({ message: 'fix: correct off-by-one', added: 10, removed: 2 }, matchers);
+  assert.strictEqual(r.classification, 'human');
+  assert.strictEqual(r.lines, 12);
+});
+
+test('"AI" keyword does not match inside ordinary words', () => {
+  const r = classifyCommit(
+    { message: 'make config available and maintain the email chain', added: 5, removed: 0 },
+    matchers
+  );
+  assert.strictEqual(r.classification, 'human');
+});
+
+test('direct AI authorship via keyword', () => {
+  const r = classifyCommit({ message: 'Generated by GPT', added: 5, removed: 0 }, matchers);
+  assert.strictEqual(r.classification, 'ai');
+});
+
+test('co-authored detected from Co-Authored-By trailer', () => {
+  const message = 'feat: add feature\n\nCo-Authored-By: Claude <noreply@anthropic.com>';
+  const r = classifyCommit({ message, added: 5, removed: 0 }, matchers);
+  assert.strictEqual(r.classification, 'co-authored');
+});
+
+test('human co-author is not treated as AI', () => {
+  const message = 'feat: add feature\n\nCo-Authored-By: Jane Doe <jane@example.com>';
+  const r = classifyCommit({ message, added: 5, removed: 0 }, matchers);
+  assert.strictEqual(r.classification, 'human');
+});
+
+console.log('validation');
+
+test('commits-count parsing and bounds', () => {
+  assert.strictEqual(validateCommitsCount('500'), 500);
+  assert.throws(() => validateCommitsCount('0'));
+  assert.throws(() => validateCommitsCount('abc'));
+});
+
+test('co-author-multiplier bounds', () => {
+  assert.strictEqual(validateCoAuthorMultiplier('0.5'), 0.5);
+  assert.throws(() => validateCoAuthorMultiplier('1.5'));
+  assert.throws(() => validateCoAuthorMultiplier('-0.1'));
+});
+
+test('ai-keywords splitting', () => {
+  assert.deepStrictEqual(validateAIKeywords('Claude, GPT ,AI'), ['Claude', 'GPT', 'AI']);
+  assert.throws(() => validateAIKeywords(' , '));
+});
+
+test('badge-style allow-list', () => {
+  assert.strictEqual(validateBadgeStyle('for-the-badge'), 'for-the-badge');
+  assert.throws(() => validateBadgeStyle('rounded'));
+});
+
+test('badge-color hex and named', () => {
+  assert.strictEqual(validateBadgeColor('27ae60'), '27ae60');
+  assert.strictEqual(validateBadgeColor('blue'), 'blue');
+  assert.throws(() => validateBadgeColor('#27ae60'));
+  assert.throws(() => validateBadgeColor('notacolor'));
+});
+
+test('assert-index parsing', () => {
+  assert.deepStrictEqual(validateAssertIndex('6.0-10.0'), { min: 6, max: 10 });
+  assert.strictEqual(validateAssertIndex(''), null);
+  assert.throws(() => validateAssertIndex('10-6'));
+  assert.throws(() => validateAssertIndex('0-11'));
+});
+
+test('validateAllInputs passes through badge-output-file (regression)', () => {
+  const result = validateAllInputs({
+    commitsCount: '10',
+    coAuthorMultiplier: '0.5',
+    aiKeywords: 'Claude',
+    badgeStyle: 'flat',
+    badgeColor: 'blue',
+    badgeLogo: 'github',
+    assertIndex: '',
+    badgeOutputFile: 'badge-url.txt',
+    includeMessage: 'Vibe Index',
+  });
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
+  assert.strictEqual(result.validated.badgeLogo, 'github');
+});
+
+console.log(`\n${passed} passed, ${failed} failed`);
+if (failed > 0) {
+  process.exit(1);
+}

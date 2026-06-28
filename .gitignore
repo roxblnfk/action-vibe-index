@@ -12,3 +12,11 @@ build/
 .env
 .env.local
 badge-url.txt
+
+# Internal, non-English working docs (kept local only)
+CONVENTIONS.md
+DEVELOPMENT.md
+EXAMPLES.md
+QUICKSTART.md
+STRUCTURE.md
+SUMMARY.md

@@ -99,6 +99,26 @@ function validateAssertIndex(assertIndex) {
   return { min, max };
 }
 
+function validateBadgeLogo(logo) {
+  if (!logo || typeof logo !== 'string') {
+    return '';
+  }
+  // Logos are simple-icons slugs (e.g. "github", "javascript"); keep it simple
+  // and only allow safe characters.
+  const trimmed = logo.trim();
+  if (trimmed && !/^[a-zA-Z0-9._-]+$/.test(trimmed)) {
+    throw new Error(`badge-logo must be a valid logo slug. Got: "${logo}"`);
+  }
+  return trimmed;
+}
+
+function validateBadgeOutputFile(file) {
+  if (!file || typeof file !== 'string') {
+    return '';
+  }
+  return file.trim();
+}
+
 function validateIncludeMessage(message) {
   if (!message || typeof message !== 'string') {
     return 'Vibe Index';
@@ -125,6 +145,8 @@ function validateAllInputs(inputs) {
     validated.badgeColor = validateBadgeColor(inputs.badgeColor);
     validated.assertIndex = validateAssertIndex(inputs.assertIndex);
     validated.includeMessage = validateIncludeMessage(inputs.includeMessage);
+    validated.badgeLogo = validateBadgeLogo(inputs.badgeLogo);
+    validated.badgeOutputFile = validateBadgeOutputFile(inputs.badgeOutputFile);
 
     return {
       success: true,
@@ -146,5 +168,7 @@ module.exports = {
   validateBadgeColor,
   validateAssertIndex,
   validateIncludeMessage,
+  validateBadgeLogo,
+  validateBadgeOutputFile,
   validateAllInputs,
 };

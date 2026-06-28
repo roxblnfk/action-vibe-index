@@ -1,21 +1,23 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
+const fs = require('fs');
+const core = require('./core');
 const { analyzeRepository } = require('./analyzer');
-const { calculateVibeIndex, getColorForIndex } = require('./calculator');
-const { generateBadgeUrl } = require('./badge');
+const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('./calculator');
+const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
 const { validateAllInputs } = require('./validation');
+
+const DEFAULT_BADGE_COLOR = '3498db';
 
 async function run() {
   try {
-    // Get and validate inputs
     const rawInputs = {
       commitsCount: core.getInput('commits-count') || '500',
       coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.5',
       aiKeywords: core.getInput('ai-keywords') || 'Claude,GPT,AI,Agent',
       badgeStyle: core.getInput('badge-style') || 'flat-square',
-      badgeColor: core.getInput('badge-color') || '3498db',
-      assertIndex: core.getInput('assert-index') || '',
-      badgeOutputFile: core.getInput('badge-output-file') || '',
+      badgeColor: core.getInput('badge-color') || DEFAULT_BADGE_COLOR,
+      badgeLogo: core.getInput('badge-logo'),
+      assertIndex: core.getInput('assert-index'),
+      badgeOutputFile: core.getInput('badge-output-file'),
       includeMessage: core.getInput('include-message') || 'Vibe Index',
     };
 
@@ -31,44 +33,42 @@ async function run() {
       aiKeywords,
       badgeStyle,
       badgeColor,
+      badgeLogo,
       assertIndex,
       badgeOutputFile,
       includeMessage,
     } = validation.validated;
 
-    core.info(`Starting Vibe Index analysis...`);
+    core.info('Starting Vibe Index analysis...');
     core.info(`  Commits to analyze: ${commitsCount}`);
     core.info(`  Co-author multiplier: ${coAuthorMultiplier}`);
     core.info(`  AI keywords: ${aiKeywords.join(', ')}`);
 
-    // Analyze repository
     const analysis = await analyzeRepository({
       commitsCount,
       coAuthorMultiplier,
       aiKeywords,
     });
 
-    // Calculate Vibe Index
     const { vibeIndex, metrics } = calculateVibeIndex(analysis);
+    const score = vibeIndex.toFixed(1);
 
-    // Choose badge color based on Vibe Index (if default was used)
-    let finalBadgeColor = badgeColor;
-    if (badgeColor === '3498db') { // Default color
-      finalBadgeColor = getColorForIndex(vibeIndex);
-    }
+    // Auto-pick a color based on the score when the user kept the default.
+    const finalBadgeColor = badgeColor === DEFAULT_BADGE_COLOR
+      ? getColorForIndex(vibeIndex)
+      : badgeColor;
 
-    // Generate badge URL
     const badgeUrl = generateBadgeUrl({
-      message: includeMessage,
-      value: vibeIndex.toFixed(1),
+      label: includeMessage,
+      message: `${score}/10.0`,
       style: badgeStyle,
       color: finalBadgeColor,
+      logo: badgeLogo,
     });
 
-    const badgeMarkdown = `[![Vibe Index](${badgeUrl})]()`;
+    const badgeMarkdown = generateBadgeMarkdown(badgeUrl, includeMessage);
 
-    // Output results
-    core.setOutput('vibe-index', vibeIndex.toFixed(1));
+    core.setOutput('vibe-index', score);
     core.setOutput('human-percentage', metrics.humanPercentage.toFixed(1));
     core.setOutput('ai-percentage', metrics.aiPercentage.toFixed(1));
     core.setOutput('human-commits-percentage', metrics.humanCommitsPercentage.toFixed(1));
@@ -76,38 +76,32 @@ async function run() {
     core.setOutput('badge-url', badgeUrl);
     core.setOutput('badge-markdown', badgeMarkdown);
 
-    // Log results
-    core.info(`\n📊 Vibe Index Results:`);
-    core.info(`  Vibe Index: ${vibeIndex.toFixed(1)}/10.0`);
+    core.info('\nVibe Index Results:');
+    core.info(`  Vibe Index: ${score}/10.0 (${getDescriptionForIndex(vibeIndex)})`);
     core.info(`  Human code: ${metrics.humanPercentage.toFixed(1)}%`);
     core.info(`  AI code: ${metrics.aiPercentage.toFixed(1)}%`);
     core.info(`  Human commits: ${metrics.humanCommitsPercentage.toFixed(1)}%`);
     core.info(`  AI commits: ${metrics.aiCommitsPercentage.toFixed(1)}%`);
-    core.info(`\n🎯 Badge: ${badgeUrl}`);
-    core.info(`\n📝 Markdown: ${badgeMarkdown}`);
+    core.info(`  Badge: ${badgeUrl}`);
+    core.info(`  Markdown: ${badgeMarkdown}`);
 
-    // Check assertion if specified
+    if (badgeOutputFile) {
+      fs.writeFileSync(badgeOutputFile, badgeUrl);
+      core.info(`Badge URL written to: ${badgeOutputFile}`);
+    }
+
     if (assertIndex) {
       const { min, max } = assertIndex;
-
       if (vibeIndex < min || vibeIndex > max) {
         core.setFailed(
-          `Vibe Index ${vibeIndex.toFixed(1)} is outside assertion range [${min}, ${max}]`
+          `Vibe Index ${score} is outside assertion range [${min.toFixed(1)}, ${max.toFixed(1)}]`
         );
         return;
       }
-
-      core.info(`✅ Vibe Index ${vibeIndex.toFixed(1)} is within assertion range [${min}, ${max}]`);
+      core.info(`Vibe Index ${score} is within assertion range [${min.toFixed(1)}, ${max.toFixed(1)}]`);
     }
 
-    // Write badge URL to file if specified
-    if (badgeOutputFile) {
-      const fs = require('fs');
-      fs.writeFileSync(badgeOutputFile, badgeUrl);
-      core.info(`\n📄 Badge URL written to: ${badgeOutputFile}`);
-    }
-
-    core.info(`\n✅ Vibe Index analysis completed successfully!`);
+    core.info('Vibe Index analysis completed successfully.');
   } catch (error) {
     core.setFailed(`Error: ${error.message}`);
   }

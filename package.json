@@ -4,8 +4,7 @@
   "description": "GitHub Action to measure the ratio of human-written vs AI-generated code",
   "main": "src/index.js",
   "scripts": {
-    "test": "node tests/test.js",
-    "analyze": "node src/analyzer.js"
+    "test": "node tests/test.js"
   },
   "keywords": [
     "github",
@@ -17,11 +16,7 @@
   ],
   "author": "Alexei Gagarin",
   "license": "MIT",
-  "dependencies": {
-    "@actions/core": "^1.10.0",
-    "@actions/github": "^5.1.1"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.0"
+  "engines": {
+    "node": ">=20"
   }
 }

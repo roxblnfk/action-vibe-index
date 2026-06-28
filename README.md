@@ -1,6 +1,6 @@
 # 🎵 Vibe Index GitHub Action
 
-[![Vibe Index](https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-27ae60?style=flat-square)](/)
+![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=flat-square)
 
 Measure the ratio of human-written code vs AI-generated code in your repository and generate a dynamic badge for your README.
 
@@ -54,13 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - run: npm install
+          fetch-depth: 0  # required: the action needs full commit history
 
       - uses: roxblnfk/vibe-index@v1
         id: vibe
@@ -68,8 +62,8 @@ jobs:
       - name: Update README
         run: |
           badge_url="${{ steps.vibe.outputs.badge-url }}"
-          # Replace badge in README
-          sed -i "s|https://img.shields.io/badge/Vibe%20Index-.*|$badge_url|g" README.md
+          # Replace any existing shields.io Vibe Index badge URL in the README
+          sed -i "s|https://img.shields.io/static/v1?label=Vibe%20Index[^)\" ]*|$badge_url|g" README.md
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -112,7 +106,8 @@ Prevent merging if Vibe Index drops below a threshold:
 | `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
 | `ai-keywords` | No | `Claude,GPT,AI,Agent` | Comma-separated keywords to detect AI authorship |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
-| `badge-color` | No | `3498db` | Badge color (hex without `#` or color name) |
+| `badge-color` | No | `3498db` | Badge color (hex without `#` or color name). When left at the default, the color is picked automatically from the score |
+| `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
 | `include-message` | No | `Vibe Index` | Custom label for badge |
@@ -131,25 +126,26 @@ Prevent merging if Vibe Index drops below a threshold:
 
 ## 🎨 Badge Styles
 
-All examples use `commit-count: 100` and `co-author-multiplier: 0.5`:
+The badge is generated through the shields.io `static/v1` endpoint, so labels
+and messages are always safely URL-encoded.
 
 ### Default (flat-square)
 ```
-https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-3498db?style=flat-square
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square
 ```
-![Badge](https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-3498db?style=flat-square)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square)
 
-### For Badge
+### For the badge
 ```
-https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-27ae60?style=for-the-badge
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=for-the-badge
 ```
-![Badge](https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-27ae60?style=for-the-badge)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=for-the-badge)
 
-### Social
+### With a logo
 ```
-https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-3498db?style=social
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square&logo=github
 ```
-![Badge](https://img.shields.io/badge/Vibe%20Index-8.5%2F10.0-3498db?style=social)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square&logo=github)
 
 ## 🎯 Color Coding
 
@@ -157,32 +153,40 @@ Colors automatically adjust based on Vibe Index:
 - **Green (27ae60)**: 8.0-10.0 (Very Human-Centric)
 - **Blue (3498db)**: 6.0-7.9 (Human-Focused)
 - **Yellow (f39c12)**: 4.0-5.9 (Balanced)
-- **Orange (e74c3c)**: 2.0-3.9 (AI-Assisted)
-- **Red (c0392b)**: 0.0-1.9 (AI-Heavy)
+- **Orange (e67e22)**: 2.0-3.9 (AI-Assisted)
+- **Red (e74c3c)**: 0.0-1.9 (AI-Heavy)
+
+Automatic coloring only applies while `badge-color` is left at its default. Set
+`badge-color` explicitly to always use a fixed color.
 
 ## 🔍 How Commits are Classified
 
-### Human Commits
-- No AI keywords in commit message
-- No AI in co-authors
+Keywords are matched as whole words (case-insensitive), so `AI` matches `AI`
+but not words like `available`, `maintain` or `email`. Merge commits are
+ignored. Each commit falls into exactly one of three categories:
+
+### Co-Authored Commits (checked first)
+- Has a `Co-Authored-By: <name>` trailer whose name matches an AI keyword
+  (e.g. `Co-Authored-By: Claude <noreply@anthropic.com>`)
+- Credit is split by the multiplier, applied to **both** lines and commit count:
+  - `multiplier` counts as AI
+  - `1 - multiplier` counts as human
 
 ### AI Commits
-- Contains AI keywords like `Claude`, `GPT`, `AI`, `Agent`
+- No AI co-author, but the message itself contains an AI keyword like
+  `Claude`, `GPT`, `AI` or `Agent` → fully AI
 
-### Co-Authored Commits
-- Has `Co-Authored-By: <name>` trailer with AI keywords
-- Lines are counted as:
-  - `multiplier × lines` count as AI
-  - `(1 - multiplier) × lines` count as human
+### Human Commits
+- No AI co-author and no AI keyword in the message
 
 **Example** with `co-author-multiplier: 0.5`:
 ```
 Added 100 lines
-Co-Authored-By: Claude <claude@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 Results in:
-- 50 lines as AI
-- 50 lines as human
+- 50 lines as AI, 50 lines as human
+- 0.5 of the commit as AI, 0.5 as human
 
 ## 📊 Vibe Index Formula
 

@@ -24,9 +24,14 @@ inputs:
     default: 'flat-square'
 
   badge-color:
-    description: 'Badge color (hex without #, or standard color name)'
+    description: 'Badge color (hex without #, or standard color name). When left at the default, the color is chosen automatically from the score'
     required: false
     default: '3498db'
+
+  badge-logo:
+    description: 'Optional logo to show on the badge (a simple-icons slug, e.g. "github")'
+    required: false
+    default: ''
 
   assert-index:
     description: 'Optional range for assertion (e.g., "7.0-10.0" or "5.0-8.0"). Action will fail if index is outside this range'
@@ -68,3 +73,7 @@ outputs:
 runs:
   using: 'node20'
   main: 'src/index.js'
+
+branding:
+  icon: 'activity'
+  color: 'blue'

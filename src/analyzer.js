@@ -1,83 +1,66 @@
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
+
+// ASCII control characters used as field/record separators in `git log`
+// output. They never appear in commit messages or numstat lines, so parsing
+// is unambiguous.
+const FIELD_SEP = '\x1f'; // Unit Separator
+const RECORD_SEP = '\x1e'; // Record Separator
 
 /**
- * Analyze repository commits and code authorship
+ * Analyze repository commits and code authorship.
+ *
  * @param {Object} options
  * @param {number} options.commitsCount - Number of commits to analyze
- * @param {number} options.coAuthorMultiplier - Multiplier for co-authored code (0-1)
- * @param {string[]} options.aiKeywords - Keywords to detect AI authorship
+ * @param {number} options.coAuthorMultiplier - Share of credit given to AI in co-authored commits (0-1)
+ * @param {string[]} options.aiKeywords - Keywords used to detect AI authorship
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzeRepository(options) {
   const { commitsCount, coAuthorMultiplier, aiKeywords } = options;
 
-  // Get recent commits
   const commits = getRecentCommits(commitsCount);
+  const matchers = buildKeywordMatchers(aiKeywords);
 
-  let totalLinesAdded = 0;
-  let totalLinesRemoved = 0;
-  let humanLinesAdded = 0;
-  let humanLinesRemoved = 0;
-  let aiLinesAdded = 0;
-  let aiLinesRemoved = 0;
-  let aiCoAuthoredLinesAdded = 0;
-  let aiCoAuthoredLinesRemoved = 0;
+  let totalLinesChanged = 0;
+  let humanLinesChanged = 0;
+  let aiLinesChanged = 0;
 
-  let totalCommits = commits.length;
-  let aiCommits = 0;
+  let humanCommitsWeight = 0;
+  let aiCommitsWeight = 0;
 
-  // Analyze each commit
   for (const commit of commits) {
-    const { added, removed, isAI, isCoAuthored } = analyzeCommit(commit, aiKeywords);
+    const { lines, classification } = classifyCommit(commit, matchers);
+    totalLinesChanged += lines;
 
-    totalLinesAdded += added;
-    totalLinesRemoved += removed;
-
-    if (isAI) {
-      aiCommits++;
-
-      if (isCoAuthored) {
-        // Co-authored with AI - apply multiplier
-        aiCoAuthoredLinesAdded += added;
-        aiCoAuthoredLinesRemoved += removed;
-        humanLinesAdded += added * (1 - coAuthorMultiplier);
-        humanLinesRemoved += removed * (1 - coAuthorMultiplier);
-      } else {
-        // Pure AI commit
-        aiLinesAdded += added;
-        aiLinesRemoved += removed;
-      }
+    if (classification === 'ai') {
+      aiLinesChanged += lines;
+      aiCommitsWeight += 1;
+    } else if (classification === 'co-authored') {
+      // Split credit between AI and human using the configured multiplier,
+      // applied consistently to both lines of code and commit authorship.
+      aiLinesChanged += lines * coAuthorMultiplier;
+      humanLinesChanged += lines * (1 - coAuthorMultiplier);
+      aiCommitsWeight += coAuthorMultiplier;
+      humanCommitsWeight += 1 - coAuthorMultiplier;
     } else {
-      // Human commit
-      humanLinesAdded += added;
-      humanLinesRemoved += removed;
+      humanLinesChanged += lines;
+      humanCommitsWeight += 1;
     }
   }
 
-  // Calculate percentages
-  const totalLinesChanged = totalLinesAdded + totalLinesRemoved;
-  const humanLinesChanged = humanLinesAdded + humanLinesRemoved;
-  const aiLinesChanged = aiLinesAdded + aiLinesRemoved + aiCoAuthoredLinesAdded + aiCoAuthoredLinesRemoved;
+  const totalCommits = commits.length;
 
-  const humanPercentage = totalLinesChanged > 0 ? (humanLinesChanged / totalLinesChanged) * 100 : 0;
+  const humanPercentage = totalLinesChanged > 0 ? (humanLinesChanged / totalLinesChanged) * 100 : 100;
   const aiPercentage = totalLinesChanged > 0 ? (aiLinesChanged / totalLinesChanged) * 100 : 0;
-  const humanCommitsPercentage = totalCommits > 0 ? ((totalCommits - aiCommits) / totalCommits) * 100 : 0;
-  const aiCommitsPercentage = totalCommits > 0 ? (aiCommits / totalCommits) * 100 : 0;
+  const humanCommitsPercentage = totalCommits > 0 ? (humanCommitsWeight / totalCommits) * 100 : 100;
+  const aiCommitsPercentage = totalCommits > 0 ? (aiCommitsWeight / totalCommits) * 100 : 0;
 
   return {
     totalCommits,
-    aiCommits,
-    humanCommits: totalCommits - aiCommits,
-    totalLinesAdded,
-    totalLinesRemoved,
+    aiCommitsWeight,
+    humanCommitsWeight,
     totalLinesChanged,
-    humanLinesAdded,
-    humanLinesRemoved,
     humanLinesChanged,
-    aiLinesAdded,
-    aiLinesRemoved,
-    aiCoAuthoredLinesAdded,
-    aiCoAuthoredLinesRemoved,
     aiLinesChanged,
     humanPercentage,
     aiPercentage,
@@ -87,102 +70,145 @@ async function analyzeRepository(options) {
 }
 
 /**
- * Get recent commits
+ * Fetch recent non-merge commits together with their line stats in a single
+ * `git log` invocation. Each commit is emitted as:
+ *   <RECORD_SEP><hash><FIELD_SEP><full message><FIELD_SEP>\n<numstat lines>
+ *
+ * Merge commits are excluded: they don't represent authored code and `git`
+ * reports no numstat for them by default.
+ *
  * @param {number} count - Number of commits to fetch
- * @returns {Array<Object>} Array of commits
+ * @returns {Array<{hash: string, message: string, added: number, removed: number}>}
  */
 function getRecentCommits(count) {
+  let output;
   try {
-    const output = execSync(
-      `git log -${count} --format=%H%n%s%n%B%n---COMMIT_END---`,
-      { encoding: 'utf-8' }
+    output = execFileSync(
+      'git',
+      [
+        'log',
+        `-${count}`,
+        '--no-merges',
+        '--numstat',
+        `--format=${RECORD_SEP}%H${FIELD_SEP}%B${FIELD_SEP}`,
+      ],
+      { encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 }
     );
-
-    const commits = [];
-    const commitBlocks = output.split('---COMMIT_END---').filter(block => block.trim());
-
-    for (const block of commitBlocks) {
-      const lines = block.trim().split('\n');
-      if (lines.length >= 2) {
-        const hash = lines[0];
-        const subject = lines[1];
-        const body = lines.slice(2).join('\n');
-
-        commits.push({
-          hash,
-          subject,
-          body,
-          fullMessage: block.trim(),
-        });
-      }
-    }
-
-    return commits;
   } catch (error) {
     throw new Error(`Failed to get git commits: ${error.message}`);
   }
+
+  const commits = [];
+  const records = output.split(RECORD_SEP).filter(block => block.trim());
+
+  for (const record of records) {
+    const sepIndex = record.indexOf(FIELD_SEP);
+    if (sepIndex === -1) {
+      continue;
+    }
+
+    const hash = record.slice(0, sepIndex).trim();
+    const rest = record.slice(sepIndex + 1);
+
+    // `rest` is "<message><FIELD_SEP>\n<numstat block>". Splitting on the
+    // second separator cleanly divides the (possibly multi-line) message from
+    // the numstat lines, which keeps message content out of the line counting.
+    const secondSep = rest.indexOf(FIELD_SEP);
+    const message = secondSep === -1 ? rest : rest.slice(0, secondSep);
+    const numstat = secondSep === -1 ? '' : rest.slice(secondSep + 1);
+
+    const { added, removed } = parseNumstat(numstat);
+
+    commits.push({ hash, message, added, removed });
+  }
+
+  return commits;
 }
 
 /**
- * Analyze a single commit for AI authorship and line changes
- * @param {Object} commit - Commit object
- * @param {string[]} aiKeywords - Keywords to detect AI
- * @returns {Object} Analysis results
+ * Sum added/removed lines from a `git --numstat` block, skipping binary
+ * files (reported as "-\t-\t<path>").
+ *
+ * @param {string} numstat
+ * @returns {{ added: number, removed: number }}
  */
-function analyzeCommit(commit, aiKeywords) {
-  const fullMessage = `${commit.subject}\n${commit.body}`;
-
-  // Check for AI authorship
-  const isAI = aiKeywords.some(keyword =>
-    fullMessage.toLowerCase().includes(keyword.toLowerCase())
-  );
-
-  // Check if it's co-authored (has Co-Authored-By but not pure AI)
-  const coAuthorPattern = /Co-Authored-By:\s*(.+)/gi;
-  const coAuthors = [];
-  let match;
-  while ((match = coAuthorPattern.exec(fullMessage)) !== null) {
-    coAuthors.push(match[1]);
-  }
-
-  const isCoAuthored = coAuthors.length > 0 && isAI;
-
-  // Get line changes
-  const diffOutput = execSync(`git show --numstat ${commit.hash} --pretty=format:`, {
-    encoding: 'utf-8',
-  });
-
+function parseNumstat(numstat) {
   let added = 0;
   let removed = 0;
 
-  const lines = diffOutput.trim().split('\n');
-  for (const line of lines) {
-    if (line.trim()) {
-      const parts = line.split('\t');
-      if (parts.length >= 2) {
-        const addedStr = parts[0];
-        const removedStr = parts[1];
-
-        // Skip binary files (marked with -)
-        if (addedStr !== '-' && removedStr !== '-') {
-          added += parseInt(addedStr, 10) || 0;
-          removed += parseInt(removedStr, 10) || 0;
-        }
-      }
+  for (const line of numstat.split('\n')) {
+    if (!line.trim()) {
+      continue;
     }
+    const parts = line.split('\t');
+    if (parts.length < 2) {
+      continue;
+    }
+    const [addedStr, removedStr] = parts;
+    if (addedStr === '-' || removedStr === '-') {
+      continue; // binary file
+    }
+    added += parseInt(addedStr, 10) || 0;
+    removed += parseInt(removedStr, 10) || 0;
   }
 
-  return {
-    added,
-    removed,
-    isAI,
-    isCoAuthored,
-    coAuthors,
-  };
+  return { added, removed };
+}
+
+/**
+ * Build case-insensitive, word-boundary regexes for each AI keyword.
+ * Word boundaries prevent false positives such as "AI" matching inside
+ * "available", "maintain" or "email".
+ *
+ * @param {string[]} keywords
+ * @returns {RegExp[]}
+ */
+function buildKeywordMatchers(keywords) {
+  return keywords.map(keyword => {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i');
+  });
+}
+
+/**
+ * Classify a commit as 'human', 'ai' (authored by AI) or 'co-authored'
+ * (collaboratively written with AI). Co-authorship is detected specifically
+ * from Co-Authored-By trailers that name an AI; a generic AI keyword anywhere
+ * else in the message marks the commit as AI-authored.
+ *
+ * @param {{message: string, added: number, removed: number}} commit
+ * @param {RegExp[]} matchers
+ * @returns {{ lines: number, classification: 'human'|'ai'|'co-authored' }}
+ */
+function classifyCommit(commit, matchers) {
+  const lines = commit.added + commit.removed;
+  const message = commit.message || '';
+
+  const coAuthorLines = [];
+  const coAuthorPattern = /^\s*Co-Authored-By:\s*(.+)$/gim;
+  let match;
+  while ((match = coAuthorPattern.exec(message)) !== null) {
+    coAuthorLines.push(match[1]);
+  }
+
+  const hasAiCoAuthor = coAuthorLines.some(line =>
+    matchers.some(re => re.test(line))
+  );
+  if (hasAiCoAuthor) {
+    return { lines, classification: 'co-authored' };
+  }
+
+  const messageMentionsAi = matchers.some(re => re.test(message));
+  if (messageMentionsAi) {
+    return { lines, classification: 'ai' };
+  }
+
+  return { lines, classification: 'human' };
 }
 
 module.exports = {
   analyzeRepository,
   getRecentCommits,
-  analyzeCommit,
+  classifyCommit,
+  buildKeywordMatchers,
 };
