@@ -15,7 +15,7 @@
     "badge"
   ],
   "author": "Alexei Gagarin",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "engines": {
     "node": ">=20"
   }
