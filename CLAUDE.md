@@ -29,7 +29,7 @@ action.yml                    # GitHub Action definition
 package.json                  # Node.js dependencies
 README.md                     # User-facing documentation
 CLAUDE.md                     # This file
-LICENSE                       # MIT License
+LICENSE                       # BSD-3-Clause License
 ```
 
 ## Architecture
@@ -279,4 +279,4 @@ Tests verify:
 
 ## License
 
-MIT - See LICENSE file
+BSD-3-Clause - See LICENSE file

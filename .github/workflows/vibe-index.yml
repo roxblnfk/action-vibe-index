@@ -28,6 +28,7 @@ jobs:
           # even when the gate fails. GITHUB_TOKEN commits don't retrigger CI.
           commit: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          badge-style: for-the-badge
           # assert-index alerts (fails the run) when the score is out of range.
           assert-index: '8.0-10.0'
 

@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- License changed from MIT to BSD-3-Clause (LICENSE, `package.json`, docs).
 - The badge message is now just the score (e.g. `7.4`) instead of `7.4/10.0`,
   and a perfect score shows as `10` (no `.0`).
 - `co-author-multiplier` default changed from `0.5` to `0.8` (an AI co-authored

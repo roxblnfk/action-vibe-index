@@ -1,8 +1,23 @@
-# 🎵 Vibe Index GitHub Action
+<p align="center">
+    <img alt="Vibe Index" src="docs/logo.svg" width="420" style="display: block" />
+</p>
 
-<!-- vibe-index:start -->
-[![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=7.0&color=6069e4&style=flat-square&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI%2BPHBhdGggZD0iTTkgNCBROSAxMyAxOCAxMyBROSAxMyA5IDIyIFE5IDEzIDAgMTMgUTkgMTMgOSA0IFoiLz48cGF0aCBkPSJNMTkgMSBRMTkgNiAyNCA2IFExOSA2IDE5IDExIFExOSA2IDE0IDYgUTE5IDYgMTkgMSBaIi8%2BPHBhdGggZD0iTTIwIDE0IFEyMCAxOCAyNCAxOCBRMjAgMTggMjAgMjIgUTIwIDE4IDE2IDE4IFEyMCAxOCAyMCAxNCBaIi8%2BPC9zdmc%2B)](https://github.com/roxblnfk/action-vibe-index)
-<!-- vibe-index:end -->
+<p align="center">✨ How hard does your repo vibe? ✨</p>
+
+<div align="center">
+
+<!-- vibe-index:start --><!-- vibe-index:end -->
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Vibe%20Index-8a2be2?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/marketplace/actions/vibe-index)
+[![Support on Boosty](https://img.shields.io/static/v1?style=for-the-badge&label=&message=Sponsorship&logo=Boosty&logoColor=white&color=%23F15F2C)](https://boosty.to/roxblnfk)
+
+</div>
+
+<br />
+
+**Vibe Index** reads your git history and scores how much of your repo was
+vibe‑coded by AI vs hand‑written by humans — then turns it into a badge you can
+flex. The higher the score, the harder it vibes: **`0.0`** = every line crafted
+by human hands, **`10.0`** = pure AI, top to bottom.
 
 <p align="center">
   <picture>
@@ -12,120 +27,108 @@
   </picture>
 </p>
 
-**The higher the score, the more of your code was written by AI.**
-`0.0` = every line hand-written by a human · `10.0` = everything authored by AI agents or bots.
-
-Vibe Index analyzes your git history to measure the ratio of AI-written vs
-hand-written code, and turns it into a dynamic badge for your README.
-
-## 📊 What is Vibe Index?
-
-**Vibe Index** is a metric that analyzes your repository's commit history to determine:
-- What percentage of code was written by humans
-- What percentage was written or assisted by AI
-- A combined score from 0.0 to 10.0 (where **10.0 = fully AI/"vibe-coded"** and **0.0 = fully hand-written**)
-
-The metric weighs:
-- **60%**: Lines of code ratio (human vs AI)
-- **40%**: Commit authorship ratio (human vs AI commits)
-
-### How it detects AI-authored code:
-
-Detection is based on commit **identities** — the author `Name <email>` and any
-`Co-Authored-By:` identities — matched against a curated list of AI signatures
-(vendor email domains like `@anthropic.com`, GitHub App `[bot]` accounts, the
-Copilot agent identity, …). It deliberately does **not** scan the free-text
-message, so a human who merely mentions an AI tool, or who happens to be named
-"Claude", is never misclassified.
-
-1. **AI author**: the commit author identity is an AI/bot → counted fully as AI
-2. **Co-authored with AI**: a `Co-Authored-By:` identity is an AI → credit is
-   split with a configurable multiplier (0.0-1.0), giving partial credit to the human
-
-The built-in signature list lives in [`src/bot-signatures.js`](src/bot-signatures.js)
-and is expanded in new releases. To detect tools specific to your team, add your
-own regexes via `extra-bot-patterns` — they are merged on top of the built-in list.
-
 ## 🚀 Usage
 
-### Basic Setup
+Two steps: drop the markers where you want the badge, then run the action.
 
-Add this action to your workflow:
-
-```yaml
-- uses: roxblnfk/vibe-index@v1
-  id: vibe
-  with:
-    commits-count: '500'
-    co-author-multiplier: '0.8'
-    badge-style: 'flat-square'
-```
-
-### Example 1: Post Badge in README
-
-First, add the markers anywhere in your `README.md` (the action replaces
-whatever is between them):
-
-```markdown
-<!-- vibe-index:start -->
-![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=0.0&color=lightgrey&style=flat-square)
-<!-- vibe-index:end -->
-```
-
-The action replaces whatever sits between the markers. Even an empty pair works:
+### 1. Add the markers to your README
 
 ```markdown
 <!-- vibe-index:start --><!-- vibe-index:end -->
 ```
 
-Layout is chosen so the badge always renders on GitHub: when the start marker
-begins its own line, the badge is written on its own line (a line that *starts*
-with `<!--` is treated as a raw HTML block by GitHub, so an inline image there
-would not render). When other content precedes the marker, the badge stays
-inline — so it works inside a row of badges:
+The action rewrites whatever is between the markers (an empty pair is fine). On
+their own line you get a standalone badge; placed after other content they keep
+the badge inline — so it also works inside a row of badges.
 
-```markdown
-![build](...) <!-- vibe-index:start -->![Vibe Index](...)<!-- vibe-index:end --> ![license](...)
-```
-
-The action updates `README.md` by default and can commit & push the change
-itself (`commit`/`push`), so no extra step is needed:
+### 2. Run the action
 
 ```yaml
-name: Update Vibe Index Badge
+name: Vibe Index
 
 on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly
+    - cron: '0 0 * * 0'  # refresh weekly
 
 permissions:
-  contents: write  # required for commit/push
+  contents: write  # required to commit the refreshed badge
 
 jobs:
-  vibe:
+  vibe-index:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # required: the action needs full commit history
+          fetch-depth: 0  # the action needs full git history
 
-      - uses: roxblnfk/vibe-index@v1
+      - uses: roxblnfk/action-vibe-index@v1
         with:
-          # update-files defaults to README.md (badge rewritten between markers)
-          commit: true
+          commit: true  # commit & push the updated badge in place
           push: true
 ```
 
-Prefer a dedicated commit step instead? Leave `commit`/`push` off and pass the
-updated file to e.g. `stefanzweifel/git-auto-commit-action`.
+That's it — the badge refreshes itself on every run.
 
-### Example 2: Comment on Pull Requests
+> 💡 **Already have a release workflow?** Prefer adding a single Vibe Index step
+> to it (e.g. right after your version bump) instead of a separate workflow, so
+> the badge is refreshed as part of each release. There, leave `commit`/`push`
+> off and let your existing commit step pick up the changed file.
+
+## ⚙️ Configuration
+
+Every option with its default — keep only what you need:
 
 ```yaml
-- uses: roxblnfk/vibe-index@v1
+- uses: roxblnfk/action-vibe-index@v1
+  with:
+    # ─── analysis ───
+    commits-count: '500'          # how many recent (non-merge) commits to scan
+    co-author-multiplier: '0.8'   # AI share of a co-authored commit, 0..1 (0.8 = 80% AI / 20% human)
+    extra-bot-patterns: |         # extra regexes (one per line) matched against the commit
+      @my-company-bot\.com        # author and Co-Authored-By identities, merged on top of the
+      \bInternalLLM\b             # built-in AI/bot signatures (Claude, Copilot, [bot], …)
+
+    # ─── badge look ───
+    include-message: 'Vibe Index' # left-hand label text
+    badge-style: 'flat-square'    # flat | flat-square | plastic | for-the-badge | social
+    badge-color: 'auto'           # 'auto' = color from the green→purple gradient by score, or a fixed hex / named color
+    badge-logo: 'sparkles'        # built-in 'sparkles' ✨, a simple-icons slug (e.g. 'github'), or '' for none
+    badge-link: ''                # URL the badge links to (defaults to this repo); '' = no link
+
+    # ─── where to write the badge ───
+    update-files: 'README.md'     # comma/newline list of files to update between the markers; '' to disable
+    badge-output-file: ''         # also write the raw badge URL to this file (optional)
+
+    # ─── auto-commit (needs permissions: contents: write) ───
+    commit: false                 # commit the updated files
+    push: false                   # push the commit to the current branch
+    commit-message: 'chore: update Vibe Index badge'
+    commit-user-name: 'github-actions[bot]'
+    commit-user-email: '41898282+github-actions[bot]@users.noreply.github.com'
+
+    # ─── quality gate ───
+    assert-index: ''              # fail the run if the score is outside this range, e.g. '0.0-6.0' (≤ 60% AI)
+```
+
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `vibe-index` | Score `0.0`–`10.0` |
+| `ai-percentage` / `human-percentage` | Share of code lines by AI / by humans |
+| `ai-commits-percentage` / `human-commits-percentage` | Share of commits by AI / by humans |
+| `badge-url` | Generated shields.io badge URL |
+| `badge-markdown` | Ready-to-paste markdown for the badge |
+
+### Recipe: comment the score on every pull request
+
+```yaml
+- uses: roxblnfk/action-vibe-index@v1
   id: vibe
+  with:
+    update-files: ''  # don't touch files, just compute the score
 
 - uses: actions/github-script@v7
   with:
@@ -134,210 +137,75 @@ updated file to e.g. `stefanzweifel/git-auto-commit-action`.
         issue_number: context.issue.number,
         owner: context.repo.owner,
         repo: context.repo.repo,
-        body: `## 📊 Vibe Index: ${{ steps.vibe.outputs.vibe-index }}/10.0\n![Badge](${{ steps.vibe.outputs.badge-url }})`
+        body: `Vibe Index: ${{ steps.vibe.outputs.vibe-index }} / 10`
       });
 ```
 
-### Example 3: Assert Vibe Index Range
+## 🧠 How it works
 
-Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
-(remember: higher index = more AI):
+### Detecting AI authorship
 
-```yaml
-- uses: roxblnfk/vibe-index@v1
-  with:
-    assert-index: '0.0-6.0'  # Fail if index > 6.0 (i.e. >60% AI)
-    commits-count: '500'
+Detection is based on commit **identities** — the author `Name <email>` and any
+`Co-Authored-By:` identities — matched against a curated list of signatures
+(vendor email domains like `@anthropic.com`, GitHub App `[bot]` accounts, the
+Copilot agent identity, …). It deliberately does **not** scan the free-text
+message, so a human who merely mentions an AI tool, or who happens to be named
+"Claude", is never misclassified.
+
+The built-in list lives in [`src/bot-signatures.js`](src/bot-signatures.js) and
+grows in new releases. Add tools specific to your team via `extra-bot-patterns`
+(one regex per line) — they are merged on top of the built-in signatures.
+
+### Classifying each commit
+
+Merge commits are ignored. Every other commit falls into exactly one bucket:
+
+- **AI** — the commit *author* identity is an AI/bot → counted fully as AI.
+- **Co-authored** — a human author with an AI `Co-Authored-By:` identity →
+  credit is split by `co-author-multiplier`, applied to **both** lines and the
+  commit itself.
+- **Human** — neither the author nor any co-author matches a signature.
+
+Example with the default `co-author-multiplier: 0.8`:
+
 ```
-
-## 📋 Inputs
-
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `commits-count` | No | `500` | Number of recent commits to analyze |
-| `co-author-multiplier` | No | `0.8` | Share of an AI co-authored commit credited to AI (0.0-1.0) |
-| `extra-bot-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in bot/AI signatures |
-| `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
-| `badge-color` | No | `auto` | `auto` interpolates a color along the green→purple gradient from the score; or pass a fixed hex (without `#`) / named color |
-| `badge-logo` | No | `sparkles` | Logo on the badge: the built-in `sparkles` (AI/magic ✨ icon, default), a [simple-icons](https://simpleicons.org) slug (e.g. `github`), or empty for none |
-| `badge-link` | No | repo URL | URL the badge links to (defaults to the Vibe Index repo so readers can learn what it means). Empty = no link |
-| `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
-| `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
-| `update-files` | No | `README.md` | Comma/newline-separated list of markdown files to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers. Set to empty to disable |
-| `commit` | No | `false` | Commit the updated files automatically (needs `permissions: contents: write`) |
-| `push` | No | `false` | Push the auto-commit to the current branch (used with `commit`) |
-| `commit-message` | No | `chore: update Vibe Index badge` | Message for the auto-commit |
-| `commit-user-name` | No | `github-actions[bot]` | `git user.name` for the auto-commit |
-| `commit-user-email` | No | `…github-actions[bot]@users.noreply.github.com` | `git user.email` for the auto-commit |
-| `include-message` | No | `Vibe Index` | Custom label for badge |
-
-## 📤 Outputs
-
-| Output | Description |
-|--------|-------------|
-| `vibe-index` | Vibe Index score (0.0-10.0) |
-| `human-percentage` | Percentage of code written by humans |
-| `ai-percentage` | Percentage of code written by AI |
-| `human-commits-percentage` | Percentage of commits from humans |
-| `ai-commits-percentage` | Percentage of commits from AI |
-| `badge-url` | Generated shields.io badge URL |
-| `badge-markdown` | Markdown syntax for embedding badge |
-
-## 🎨 Badge Styles
-
-The badge is generated through the shields.io `static/v1` endpoint, so labels
-and messages are always safely URL-encoded.
-
-### Default (flat-square)
-```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square
-```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square)
-
-### For the badge
-```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=27ae60&style=for-the-badge
-```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=27ae60&style=for-the-badge)
-
-### With a logo
-```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square&logo=github
-```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square&logo=github)
-
-## 🎯 Color Coding
-
-With `badge-color: auto` (the default), the badge color is interpolated along a
-**continuous green → festive purple gradient** at the exact score — green for
-hand-crafted, purple for fully AI/vibe-coded:
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/vibe-scale-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/vibe-scale.svg">
-  <img src="docs/vibe-scale.svg" alt="Vibe Index scale" width="680">
-</picture>
-
-The ramp runs through `#27ae60` → `#1abc9c` → `#3498db` → `#6c5ce7` → `#8a2be2`.
-Set `badge-color` to a fixed hex or named color to opt out of auto-coloring.
-
-## 🔍 How Commits are Classified
-
-Signatures are matched against commit **identities** (the author and any
-`Co-Authored-By:` identity), never the free-text message. Merge commits are
-ignored. Each commit falls into exactly one of three categories:
-
-### AI Commits (checked first)
-- The commit **author** identity is an AI/bot (e.g. `github-actions[bot] <…>`
-  or an agent committing under a vendor email) → counted fully as AI
-
-### Co-Authored Commits
-- A human author, but a `Co-Authored-By:` identity is an AI
-  (e.g. `Co-Authored-By: Claude <noreply@anthropic.com>`)
-- Credit is split by the multiplier, applied to **both** lines and commit count:
-  - `multiplier` counts as AI
-  - `1 - multiplier` counts as human
-
-### Human Commits
-- Neither the author nor any co-author identity matches an AI signature
-
-**Example** with `co-author-multiplier: 0.8` (the default):
-```
-Added 100 lines
+100 changed lines
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
-Results in:
-- 80 lines as AI, 20 lines as human
-- 0.8 of the commit as AI, 0.2 as human
 
-## 📊 Vibe Index Formula
+→ 80 lines counted as AI, 20 as human; and the commit counts as 0.8 AI / 0.2 human.
+
+### The score
 
 ```
 Vibe Index = (ai_code_ratio × 0.6 + ai_commits_ratio × 0.4) × 10
 ```
 
-Where:
-- `ai_code_ratio` = AI lines / total lines
-- `ai_commits_ratio` = AI commits / total commits
+Code lines weigh 60%, commit authorship 40%. Both ratios are in `0..1`, so the
+score is always `0.0`–`10.0`:
 
-**Examples:**
-- 0% AI code, 0% AI commits → **0.0** (fully hand-written)
-- 30% AI code, 30% AI commits → **3.0** (human-focused)
-- 50% AI code, 50% AI commits → **5.0** (balanced)
-- 100% AI code, 100% AI commits → **10.0** (fully AI / max vibe)
+| AI code | AI commits | Vibe Index |
+|--------:|-----------:|:----------:|
+| 0%   | 0%   | **0.0** — fully hand-written |
+| 30%  | 30%  | **3.0** — human-focused |
+| 50%  | 50%  | **5.0** — balanced |
+| 100% | 100% | **10.0** — fully AI |
 
-## 🛠️ Advanced Examples
+### Badge color
 
-### Custom Signatures
-
-The built-in signatures already cover the common tools. Use `extra-bot-patterns`
-(one regex per line, matched against commit identities) to add agents or
-automation bots specific to your team — they are merged with the built-in list:
-
-```yaml
-- uses: roxblnfk/vibe-index@v1
-  with:
-    extra-bot-patterns: |
-      @acme-ai\.example\b
-      \bInternalLLM\b
-```
-
-### Strict Quality Gate
-
-```yaml
-- uses: roxblnfk/vibe-index@v1
-  with:
-    assert-index: '0.0-2.0'  # Only near hand-written code allowed (<20% AI)
-    commits-count: '1000'
-```
-
-### Generate Multiple Badge Styles
-
-```yaml
-- uses: roxblnfk/vibe-index@v1
-  id: vibe1
-
-- uses: roxblnfk/vibe-index@v1
-  id: vibe2
-  with:
-    badge-style: 'for-the-badge'
-
-- name: Store Badges
-  run: |
-    echo "${{ steps.vibe1.outputs.badge-url }}" > badge-flat.txt
-    echo "${{ steps.vibe2.outputs.badge-url }}" > badge-large.txt
-```
+With `badge-color: auto` (the default) the color is interpolated along a
+continuous green → festive purple ramp at the exact score
+(`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`) — green for hand-crafted,
+purple for fully vibe-coded. Set a fixed hex or named color to opt out.
 
 ## 🐛 Troubleshooting
 
-### "Failed to get git commits"
-Ensure `fetch-depth: 0` is set in `checkout` action:
-```yaml
-- uses: actions/checkout@v4
-  with:
-    fetch-depth: 0
-```
+- **"Failed to get git commits"** — set `fetch-depth: 0` on `actions/checkout`,
+  so the action sees the full history.
+- **The badge doesn't update / isn't committed** — enable `commit: true`
+  (and `push: true`) and grant `permissions: contents: write`, or commit the
+  changed file with your own step.
+- **The badge image doesn't render** — keep the marker pair on its own line; a
+  line that starts with `<!--` is treated as raw HTML by GitHub, so the action
+  writes the badge on its own line there.
 
-### Assertion fails unexpectedly
-Check the action output:
-```yaml
-- run: echo "Vibe Index: ${{ steps.vibe.outputs.vibe-index }}"
-```
-
-### Co-authored commits not detected
-Verify the trailer format in commits:
-```
-Co-Authored-By: Name <email@example.com>
-```
-
-## 📝 License
-
-MIT
-
-## 🤝 Contributing
-
-Contributions welcome! Please feel free to submit issues and pull requests.
-
----
-
-**Made with ❤️ by Alexei Gagarin**
