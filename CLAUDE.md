@@ -248,7 +248,7 @@ Tests verify:
 ## Dependencies
 
 - None at runtime. The action only uses Node.js built-ins plus the `git` CLI.
-- Node.js 20+ (provided by the `node20` action runtime; `git` must be available)
+- Node.js (provided by the `node24` action runtime; `git` must be available)
 
 ## Maintenance
 

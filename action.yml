@@ -76,7 +76,7 @@ outputs:
     description: 'Markdown syntax for embedding badge'
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'src/index.js'
 
 branding:
