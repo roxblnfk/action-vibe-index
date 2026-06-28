@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `badge-discovery` input (`auto` | `markers` | `markdown`): the badge can now be
+  located either by the `<!-- vibe-index:start/end -->` markers or by an existing
+  `![Vibe Index](...)` markdown image (matched by alt text, link-wrapped form
+  supported). `auto` (default) tries markers first, then markdown.
 - Built-in `sparkles` logo (now the **default** `badge-logo`): an AI/magic ✨
   icon (a large four-pointed star plus two small ones), shipped as an SVG data
   URI. Set `badge-logo` to a simple-icons slug for a different logo, or empty

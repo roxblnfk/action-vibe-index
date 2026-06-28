@@ -49,9 +49,14 @@ inputs:
     default: ''
 
   update-files:
-    description: 'Comma- or newline-separated list of markdown files whose badge to update in place between the "<!-- vibe-index:start -->" and "<!-- vibe-index:end -->" markers. Set to an empty string to disable.'
+    description: 'Comma- or newline-separated list of markdown files whose badge to update in place. Set to an empty string to disable.'
     required: false
     default: 'README.md'
+
+  badge-discovery:
+    description: 'How to locate the badge to update: "auto" (markers, then an existing "![Vibe Index](...)" image), "markers" (only the <!-- vibe-index:start/end --> markers), or "markdown" (only an existing "![Vibe Index](...)" image)'
+    required: false
+    default: 'auto'
 
   commit:
     description: 'Commit the updated files automatically (requires permissions: contents: write). Default false.'

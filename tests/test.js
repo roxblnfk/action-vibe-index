@@ -18,6 +18,7 @@ const {
   validateAssertIndex,
   validateUpdateFiles,
   validateBoolean,
+  validateBadgeDiscovery,
   validateAllInputs,
 } = require('../src/validation');
 
@@ -310,6 +311,51 @@ test('block markers keep the badge on its own line', () => {
   assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge stays on its own line');
 });
 
+console.log('updater badge-discovery');
+
+test('markdown discovery replaces a bare ![Vibe Index](...) image', () => {
+  const doc = '# t\n\n![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=1.0&color=red)\n\nx';
+  const { content, updated, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
+  assert.strictEqual(found, true);
+  assert.strictEqual(updated, true);
+  assert.ok(content.includes(NEW_BADGE));
+  assert.ok(!content.includes('message=1.0'));
+});
+
+test('markdown discovery replaces a link-wrapped badge whole', () => {
+  const doc = '[![Vibe Index](https://x/old)](https://old-link)';
+  const { content, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
+  assert.strictEqual(found, true);
+  assert.strictEqual(content, NEW_BADGE);
+});
+
+test('markdown discovery ignores images with a different alt', () => {
+  const doc = '![build](b.svg) ![coverage](c.svg)';
+  const { updated, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
+  assert.strictEqual(found, false);
+  assert.strictEqual(updated, false);
+});
+
+test('markers mode does not touch a markdown-only badge', () => {
+  const doc = '![Vibe Index](old.svg)';
+  const { found } = replaceBadge(doc, NEW_BADGE, 'markers');
+  assert.strictEqual(found, false);
+});
+
+test('auto prefers markers, falls back to markdown', () => {
+  // markers present -> use them
+  const withMarkers = `${START_MARKER}${END_MARKER}\n\n![Vibe Index](old.svg)`;
+  const a = replaceBadge(withMarkers, NEW_BADGE, 'auto');
+  assert.ok(a.content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'markers win');
+  assert.ok(a.content.includes('![Vibe Index](old.svg)'), 'the separate markdown badge is left alone');
+
+  // no markers -> markdown fallback
+  const mdOnly = '# t\n\n![Vibe Index](old.svg)\n';
+  const b = replaceBadge(mdOnly, NEW_BADGE, 'auto');
+  assert.strictEqual(b.found, true);
+  assert.ok(b.content.includes(NEW_BADGE));
+});
+
 console.log('committer (temp git repo)');
 
 test('commitChanges commits changed files and applies identity (no push)', () => {
@@ -356,6 +402,14 @@ test('commitChanges commits changed files and applies identity (no push)', () =>
 });
 
 console.log('validation');
+
+test('badge-discovery enum (default auto)', () => {
+  assert.strictEqual(validateBadgeDiscovery(''), 'auto');
+  assert.strictEqual(validateBadgeDiscovery(undefined), 'auto');
+  assert.strictEqual(validateBadgeDiscovery('MARKERS'), 'markers');
+  assert.strictEqual(validateBadgeDiscovery('markdown'), 'markdown');
+  assert.throws(() => validateBadgeDiscovery('xml'));
+});
 
 test('boolean parsing', () => {
   assert.strictEqual(validateBoolean('commit', 'true'), true);
@@ -441,6 +495,7 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
   assert.strictEqual(result.validated.badgeLogo, 'github');
   assert.strictEqual(result.validated.badgeLink, 'https://example.com/vibe');
+  assert.strictEqual(result.validated.badgeDiscovery, 'auto');
   assert.strictEqual(result.validated.extraPatterns.length, 1);
   assert.ok(result.validated.extraPatterns[0] instanceof RegExp);
   assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);

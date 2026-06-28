@@ -126,7 +126,8 @@ Orchestrates the analysis and outputs results.
 | `badge-link` | String | repo URL | URL the badge links to (defaults to the Vibe Index repo); empty = no link |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
-| `update-files` | String | README.md | Comma/newline list of markdown files to update in place between markers |
+| `update-files` | String | README.md | Comma/newline list of markdown files to update in place |
+| `badge-discovery` | Enum | auto | How to locate the badge: `auto` / `markers` / `markdown` |
 | `commit` / `push` | Bool | false | Auto-commit (and push) the updated files |
 | `commit-message` / `commit-user-name` / `commit-user-email` | String | bot defaults | Identity/message for the auto-commit |
 | `include-message` | String | Vibe Index | Badge label text |
@@ -143,6 +144,12 @@ Place markers in README.md and let the action rewrite the badge in place
 it is robust to `&`/`/` in the URL and never touches example badges elsewhere
 in the file — unlike a `sed` one-liner, where `&` is special in the
 replacement and a global pattern clobbers every badge.
+
+`badge-discovery` selects how the badge is located: `markers` (between the
+comment markers), `markdown` (an existing `![Vibe Index](...)` image, matched by
+alt text and replaced in place — including a link-wrapped `[![…](…)](…)`), or
+`auto` (markers first, then markdown). Markdown discovery replaces only the
+first matching image.
 
 Layout follows the markers: when the start marker begins its own line the badge
 is written on its own line (a line starting with `<!--` is a raw HTML block on

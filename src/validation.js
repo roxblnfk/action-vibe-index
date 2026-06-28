@@ -123,6 +123,15 @@ function validateBadgeLogo(logo) {
   return trimmed;
 }
 
+function validateBadgeDiscovery(value) {
+  const v = (value === undefined || value === null ? '' : String(value)).trim().toLowerCase() || 'auto';
+  const allowed = ['auto', 'markers', 'markdown'];
+  if (!allowed.includes(v)) {
+    throw new Error(`badge-discovery must be one of: ${allowed.join(', ')}. Got: "${value}"`);
+  }
+  return v;
+}
+
 function validateBadgeLink(link) {
   if (!link || typeof link !== 'string') {
     return '';
@@ -192,6 +201,7 @@ function validateAllInputs(inputs) {
     validated.includeMessage = validateIncludeMessage(inputs.includeMessage);
     validated.badgeLogo = validateBadgeLogo(inputs.badgeLogo);
     validated.badgeLink = validateBadgeLink(inputs.badgeLink);
+    validated.badgeDiscovery = validateBadgeDiscovery(inputs.badgeDiscovery);
     validated.badgeOutputFile = validateBadgeOutputFile(inputs.badgeOutputFile);
     validated.updateFiles = validateUpdateFiles(inputs.updateFiles);
     validated.commit = validateBoolean('commit', inputs.commit);
@@ -225,6 +235,7 @@ module.exports = {
   validateIncludeMessage,
   validateBadgeLogo,
   validateBadgeLink,
+  validateBadgeDiscovery,
   validateBadgeOutputFile,
   validateUpdateFiles,
   validateBoolean,

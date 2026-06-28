@@ -43,6 +43,10 @@ The action rewrites whatever is between the markers (an empty pair is fine). On
 their own line you get a standalone badge; placed after other content they keep
 the badge inline — so it also works inside a row of badges.
 
+No markers? You can also just drop an `![Vibe Index](...)` image anywhere and
+set `badge-discovery: markdown` — the action finds it by its alt text and
+refreshes the URL in place. With `auto` (the default) both styles work.
+
 ### 2. Run the action
 
 ```yaml
@@ -100,7 +104,11 @@ Every option with its default — keep only what you need:
     badge-link: ''                # URL the badge links to (defaults to this repo); '' = no link
 
     # ─── where to write the badge ───
-    update-files: 'README.md'     # comma/newline list of files to update between the markers; '' to disable
+    update-files: 'README.md'     # comma/newline list of files to update; '' to disable
+    badge-discovery: 'auto'       # how to find the badge to replace:
+                                  #   auto     = markers, then an existing ![Vibe Index](...) image
+                                  #   markers  = only the <!-- vibe-index:start/end --> markers
+                                  #   markdown = only an existing ![Vibe Index](...) image
     badge-output-file: ''         # also write the raw badge URL to this file (optional)
 
     # ─── auto-commit (needs permissions: contents: write) ───

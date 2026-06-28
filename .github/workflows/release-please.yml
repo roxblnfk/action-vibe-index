@@ -1,0 +1,43 @@
+name: Release Please
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # config-file / manifest-file are the defaults, listed here for clarity.
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # When a release is published, keep the floating major/minor tags
+      # (e.g. v1, v1.2) pointing at the latest release so consumers can pin
+      # `roxblnfk/vibe-index@v1`.
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          fetch-depth: 0
+
+      - name: Update floating major and minor tags
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAJOR: ${{ steps.release.outputs.major }}
+          MINOR: ${{ steps.release.outputs.minor }}
+          SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "v${MAJOR}" "${SHA}"
+          git tag -f "v${MAJOR}.${MINOR}" "${SHA}"
+          git push --force origin "v${MAJOR}"
+          git push --force origin "v${MAJOR}.${MINOR}"

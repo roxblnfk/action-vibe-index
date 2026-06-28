@@ -17,6 +17,7 @@ async function run() {
       badgeColor: core.getInput('badge-color') || 'auto',
       badgeLogo: core.getInput('badge-logo'),
       badgeLink: core.getInput('badge-link'),
+      badgeDiscovery: core.getInput('badge-discovery'),
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
       updateFiles: core.getInput('update-files'),
@@ -42,6 +43,7 @@ async function run() {
       badgeColor,
       badgeLogo,
       badgeLink,
+      badgeDiscovery,
       assertIndex,
       badgeOutputFile,
       updateFiles,
@@ -109,7 +111,7 @@ async function run() {
 
     const changedFiles = [];
     for (const file of updateFiles) {
-      const result = updateBadgeInFile(file, badgeMarkdown);
+      const result = updateBadgeInFile(file, badgeMarkdown, badgeDiscovery);
       if (!result.ok) {
         core.warning(`Could not update ${file}: ${result.reason}`);
       } else if (result.changed) {
