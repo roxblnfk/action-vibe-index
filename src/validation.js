@@ -21,16 +21,26 @@ function validateCoAuthorMultiplier(multiplier) {
   return num;
 }
 
-function validateExtraKeywords(keywords) {
-  // Optional: these are merged on top of the built-in AI signatures, so an
-  // empty value is valid and simply means "use the built-in list only".
-  if (!keywords || typeof keywords !== 'string') {
+function validateExtraPatterns(patterns) {
+  // Optional: one regular expression per line, merged on top of the built-in
+  // AI signatures. Newline-separated (not comma) because regexes commonly
+  // contain commas (e.g. quantifiers like "{1,3}"). An empty value is valid
+  // and means "use the built-in list only".
+  if (!patterns || typeof patterns !== 'string') {
     return [];
   }
-  return keywords
-    .split(',')
-    .map(k => k.trim())
-    .filter(k => k.length > 0);
+
+  return patterns
+    .split('\n')
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(source => {
+      try {
+        return new RegExp(source, 'i');
+      } catch (error) {
+        throw new Error(`extra-ai-patterns contains an invalid regular expression: "${source}" (${error.message})`);
+      }
+    });
 }
 
 function validateBadgeStyle(style) {
@@ -146,7 +156,7 @@ function validateAllInputs(inputs) {
   try {
     validated.commitsCount = validateCommitsCount(inputs.commitsCount);
     validated.coAuthorMultiplier = validateCoAuthorMultiplier(inputs.coAuthorMultiplier);
-    validated.extraKeywords = validateExtraKeywords(inputs.extraKeywords);
+    validated.extraPatterns = validateExtraPatterns(inputs.extraPatterns);
     validated.badgeStyle = validateBadgeStyle(inputs.badgeStyle);
     validated.badgeColor = validateBadgeColor(inputs.badgeColor);
     validated.assertIndex = validateAssertIndex(inputs.assertIndex);
@@ -170,7 +180,7 @@ function validateAllInputs(inputs) {
 module.exports = {
   validateCommitsCount,
   validateCoAuthorMultiplier,
-  validateExtraKeywords,
+  validateExtraPatterns,
   validateBadgeStyle,
   validateBadgeColor,
   validateAssertIndex,

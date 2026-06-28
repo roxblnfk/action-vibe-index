@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- AI detection now uses a curated, versioned signature list in
-  `src/ai-signatures.js` (Claude, GPT, Copilot, Cursor, Devin, Gemini, `[bot]`,
-  vendor email domains, …). The `ai-keywords` input is renamed to
-  `extra-ai-keywords` and now **extends** the built-in list instead of replacing
-  it (default empty).
+- AI detection is now **identity-based**: signatures match the commit author and
+  `Co-Authored-By:` identities (vendor email domains, GitHub App `[bot]`
+  accounts, the Copilot agent identity, …), never the free-text message. This
+  stops humans who merely mention an AI — or are named like one — from being
+  misclassified.
+- The curated signatures live in a versioned list, `src/ai-signatures.js`,
+  expanded in new releases.
+- The `ai-keywords` input is replaced by `extra-ai-patterns`: full regexes (one
+  per line) merged on top of the built-in signatures instead of replacing them
+  (default empty).
 
 ## [1.0.0] - 2026-06-28
 

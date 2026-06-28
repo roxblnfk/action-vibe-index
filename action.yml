@@ -13,8 +13,8 @@ inputs:
     required: false
     default: '0.5'
 
-  extra-ai-keywords:
-    description: 'Additional comma-separated keywords to detect AI authorship, merged on top of the built-in AI signatures (Claude, GPT, Copilot, Cursor, [bot], ...). Leave empty to use the built-in list only.'
+  extra-ai-patterns:
+    description: 'Additional regular expressions (one per line) matched against commit author and Co-Authored-By identities, merged on top of the built-in AI signatures. Use to detect tools specific to your team, e.g. "@mycorp-bot\.com". Leave empty to use the built-in list only.'
     required: false
     default: ''
 

@@ -43,27 +43,30 @@ Analyzes commit history to determine human vs AI authorship.
   - Returns metrics about code lines and commits
   - Applies the co-author multiplier to both lines and commit authorship
 
-- `getRecentCommits(count)` - Fetches last N non-merge commits and their
-  numstat in a single `git log --no-merges --numstat` call (control-character
-  separators make parsing unambiguous; no per-commit `git show`)
+- `getRecentCommits(count)` - Fetches last N non-merge commits with author
+  identity (`%an <%ae>`) and numstat in a single `git log --no-merges --numstat`
+  call (control-character separators make parsing unambiguous; no per-commit
+  `git show`)
 - `classifyCommit(commit, matchers)` - Classifies one commit as
-  `human` / `ai` / `co-authored`
-- `buildKeywordMatchers(extraKeywords)` - Returns the built-in `AI_SIGNATURES`
-  (from `ai-signatures.js`) plus the user's extra keywords compiled to
-  word-boundary, case-insensitive regexes
+  `human` / `ai` / `co-authored` by matching identities
+- `buildMatchers(extraPatterns)` - Returns the built-in `AI_SIGNATURES`
+  (from `ai-signatures.js`) plus the user's extra regexes
 
 **Built-in signatures (`ai-signatures.js`):** a curated, versioned list of
-regexes (Claude, GPT, Copilot, Cursor, Devin, Gemini, `[bot]`, vendor email
-domains, …) maintained with the action. Users extend — not replace — it via the
-`extra-ai-keywords` input.
+regexes anchored to identities (vendor email domains like `@anthropic.com`,
+GitHub App `[bot]` accounts, the Copilot agent identity, …) maintained with the
+action. Users extend — not replace — it via the `extra-ai-patterns` input
+(one regex per line).
 
-**AI Detection Logic (whole-word, case-insensitive):**
-- Co-authored (checked first): a `Co-Authored-By:` trailer naming an AI keyword
-  → credit split by the multiplier (lines AND commit count). Example: 100 lines,
+**AI Detection Logic (identity-based, case-insensitive):**
+- Matching is done against the commit author identity and each `Co-Authored-By:`
+  identity — never the free-text message. This avoids flagging humans who merely
+  mention an AI tool or are named like one.
+- AI (checked first): the author identity matches a signature → fully AI.
+- Co-authored: a human author with an AI `Co-Authored-By:` identity → credit
+  split by the multiplier (lines AND commit count). Example: 100 lines,
   multiplier 0.5 → 50 AI + 50 human, and 0.5/0.5 of the commit.
-- AI: no AI co-author, but the message contains an AI keyword → fully AI
-- Human: neither of the above
-- Word-boundary matching prevents `AI` matching `available`, `email`, etc.
+- Human: neither matches.
 
 #### 2. **calculator.js** - Vibe Index Calculation
 Transforms raw metrics into a 0-10 score.
@@ -118,7 +121,7 @@ Orchestrates the analysis and outputs results.
 |-----------|------|---------|---------|
 | `commits-count` | Number | 500 | How many recent commits to analyze |
 | `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
-| `extra-ai-keywords` | String | '' | Extra keywords merged on top of the built-in AI signatures |
+| `extra-ai-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | 3498db | Badge color (hex); auto-picked from score when left at default |
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |

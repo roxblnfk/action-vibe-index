@@ -19,14 +19,20 @@ The metric weighs:
 
 ### How it detects AI-authored code:
 
-1. **Direct AI authorship**: Commits whose message matches a built-in AI
-   signature (`Claude`, `GPT`, `Copilot`, `Cursor`, `Devin`, `Gemini`, `[bot]`, …)
-2. **Co-authored with AI**: Commits with `Co-Authored-By:` trailers naming an AI
-   - Applied with a configurable multiplier (0.0-1.0) to give partial credit to human developers
+Detection is based on commit **identities** — the author `Name <email>` and any
+`Co-Authored-By:` identities — matched against a curated list of AI signatures
+(vendor email domains like `@anthropic.com`, GitHub App `[bot]` accounts, the
+Copilot agent identity, …). It deliberately does **not** scan the free-text
+message, so a human who merely mentions an AI tool, or who happens to be named
+"Claude", is never misclassified.
+
+1. **AI author**: the commit author identity is an AI/bot → counted fully as AI
+2. **Co-authored with AI**: a `Co-Authored-By:` identity is an AI → credit is
+   split with a configurable multiplier (0.0-1.0), giving partial credit to the human
 
 The built-in signature list lives in [`src/ai-signatures.js`](src/ai-signatures.js)
 and is expanded in new releases. To detect tools specific to your team, add your
-own terms via `extra-ai-keywords` — they are merged on top of the built-in list.
+own regexes via `extra-ai-patterns` — they are merged on top of the built-in list.
 
 ## 🚀 Usage
 
@@ -40,7 +46,6 @@ Add this action to your workflow:
   with:
     commits-count: '500'
     co-author-multiplier: '0.5'
-    extra-ai-keywords: 'Frobnicator,InternalBot'  # optional, on top of built-ins
     badge-style: 'flat-square'
 ```
 
@@ -124,7 +129,7 @@ Prevent merging if Vibe Index drops below a threshold:
 |-------|----------|---------|-------------|
 | `commits-count` | No | `500` | Number of recent commits to analyze |
 | `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
-| `extra-ai-keywords` | No | `` | Extra comma-separated keywords merged on top of the built-in AI signatures |
+| `extra-ai-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `3498db` | Badge color (hex without `#` or color name). When left at the default, the color is picked automatically from the score |
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
@@ -182,23 +187,23 @@ Automatic coloring only applies while `badge-color` is left at its default. Set
 
 ## 🔍 How Commits are Classified
 
-Keywords are matched as whole words (case-insensitive), so `AI` matches `AI`
-but not words like `available`, `maintain` or `email`. Merge commits are
+Signatures are matched against commit **identities** (the author and any
+`Co-Authored-By:` identity), never the free-text message. Merge commits are
 ignored. Each commit falls into exactly one of three categories:
 
-### Co-Authored Commits (checked first)
-- Has a `Co-Authored-By: <name>` trailer whose name matches an AI keyword
+### AI Commits (checked first)
+- The commit **author** identity is an AI/bot (e.g. `github-actions[bot] <…>`
+  or an agent committing under a vendor email) → counted fully as AI
+
+### Co-Authored Commits
+- A human author, but a `Co-Authored-By:` identity is an AI
   (e.g. `Co-Authored-By: Claude <noreply@anthropic.com>`)
 - Credit is split by the multiplier, applied to **both** lines and commit count:
   - `multiplier` counts as AI
   - `1 - multiplier` counts as human
 
-### AI Commits
-- No AI co-author, but the message itself contains an AI keyword like
-  `Claude`, `GPT`, `AI` or `Agent` → fully AI
-
 ### Human Commits
-- No AI co-author and no AI keyword in the message
+- Neither the author nor any co-author identity matches an AI signature
 
 **Example** with `co-author-multiplier: 0.5`:
 ```
@@ -227,15 +232,18 @@ Where:
 
 ## 🛠️ Advanced Examples
 
-### Custom Keywords
+### Custom Signatures
 
-The built-in signatures already cover the common tools. Use `extra-ai-keywords`
-only to add terms specific to your team (they are merged with the built-in list):
+The built-in signatures already cover the common tools. Use `extra-ai-patterns`
+(one regex per line, matched against commit identities) to add tools specific to
+your team — they are merged with the built-in list:
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    extra-ai-keywords: 'AcmeAgent,InternalLLM'
+    extra-ai-patterns: |
+      @acme-ai\.example\b
+      \bInternalLLM\b
 ```
 
 ### Strict Quality Gate
