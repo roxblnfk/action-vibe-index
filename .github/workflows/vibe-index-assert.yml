@@ -1,0 +1,37 @@
+name: Vibe Index Assertion
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-vibe-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check Vibe Index is in acceptable range
+        uses: ./
+        with:
+          commits-count: '500'
+          co-author-multiplier: '0.5'
+          ai-keywords: 'Claude,GPT,AI,Agent'
+          # Only allow changes if Vibe Index stays between 6.0 and 10.0
+          # This prevents merging code that significantly decreases human involvement
+          assert-index: '6.0-10.0'
+          badge-style: 'flat-square'
+          badge-color: '27ae60'
+
+      - name: Success
+        run: echo "✅ Vibe Index is within acceptable range!"

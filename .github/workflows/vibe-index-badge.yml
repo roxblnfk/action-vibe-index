@@ -1,0 +1,71 @@
+name: Generate Vibe Index Badge
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  vibe-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Calculate Vibe Index
+        id: vibe
+        uses: ./
+        with:
+          commits-count: '500'
+          co-author-multiplier: '0.5'
+          ai-keywords: 'Claude,GPT,AI,Agent,Co-Authored-By'
+          badge-style: 'flat-square'
+          badge-color: '3498db'
+          include-message: 'Vibe Index'
+
+      - name: Display Results
+        run: |
+          echo "## 📊 Vibe Index Results"
+          echo ""
+          echo "- **Vibe Index**: ${{ steps.vibe.outputs.vibe-index }}/10.0"
+          echo "- **Human Code**: ${{ steps.vibe.outputs.human-percentage }}%"
+          echo "- **AI Code**: ${{ steps.vibe.outputs.ai-percentage }}%"
+          echo "- **Human Commits**: ${{ steps.vibe.outputs.human-commits-percentage }}%"
+          echo "- **AI Commits**: ${{ steps.vibe.outputs.ai-commits-percentage }}%"
+          echo ""
+          echo "### Badge"
+          echo "${{ steps.vibe.outputs.badge-markdown }}"
+
+      - name: Update README Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # This is an example - customize based on your README structure
+          badge="${{ steps.vibe.outputs.badge-url }}"
+          echo "Badge URL: $badge"
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const vibeIndex = '${{ steps.vibe.outputs.vibe-index }}';
+            const badgeUrl = '${{ steps.vibe.outputs.badge-url }}';
+            const humanPercentage = '${{ steps.vibe.outputs.human-percentage }}';
+            const aiPercentage = '${{ steps.vibe.outputs.ai-percentage }}';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Vibe Index Analysis\n\n![Badge](${badgeUrl})\n\n- **Vibe Index**: ${vibeIndex}/10.0\n- **Human Code**: ${humanPercentage}%\n- **AI Code**: ${aiPercentage}%`
+            });

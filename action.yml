@@ -1,0 +1,70 @@
+name: 'Vibe Index'
+description: 'Measure the ratio of human-written vs AI-generated code and generate a badge'
+author: 'Alexei Gagarin'
+
+inputs:
+  commits-count:
+    description: 'Number of recent commits to analyze (default: 500)'
+    required: false
+    default: '500'
+
+  co-author-multiplier:
+    description: 'Multiplier for co-authored code (0.0 to 1.0, default: 0.5)'
+    required: false
+    default: '0.5'
+
+  ai-keywords:
+    description: 'Keywords to detect AI authorship in co-author field (comma-separated, default: "Claude,GPT,AI,Agent")'
+    required: false
+    default: 'Claude,GPT,AI,Agent'
+
+  badge-style:
+    description: 'Shield.io badge style (flat, flat-square, plastic, for-the-badge, social)'
+    required: false
+    default: 'flat-square'
+
+  badge-color:
+    description: 'Badge color (hex without #, or standard color name)'
+    required: false
+    default: '3498db'
+
+  assert-index:
+    description: 'Optional range for assertion (e.g., "7.0-10.0" or "5.0-8.0"). Action will fail if index is outside this range'
+    required: false
+    default: ''
+
+  badge-output-file:
+    description: 'File to write badge URL to (e.g., badge-url.txt)'
+    required: false
+    default: ''
+
+  include-message:
+    description: 'Custom message/label for badge (default: "Vibe Index")'
+    required: false
+    default: 'Vibe Index'
+
+outputs:
+  vibe-index:
+    description: 'Calculated Vibe Index score (0.0-10.0)'
+
+  human-percentage:
+    description: 'Percentage of code written by humans'
+
+  ai-percentage:
+    description: 'Percentage of code written by AI'
+
+  human-commits-percentage:
+    description: 'Percentage of commits from humans'
+
+  ai-commits-percentage:
+    description: 'Percentage of commits from AI'
+
+  badge-url:
+    description: 'Generated badge URL (shields.io)'
+
+  badge-markdown:
+    description: 'Markdown syntax for embedding badge'
+
+runs:
+  using: 'node20'
+  main: 'src/index.js'
