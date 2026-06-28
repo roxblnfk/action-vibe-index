@@ -19,6 +19,38 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
+      # Refresh the Vibe Index badge on the open release PR so it ships with the
+      # release (the same pattern as the testo project). Runs only while the
+      # release PR exists; the badge change is reviewed and merged with it.
+      - name: Checkout release PR branch
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          fetch-depth: 0
+
+      - name: Update Vibe Index badge
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        uses: ./
+        with:
+          badge-discovery: markdown
+          badge-style: for-the-badge
+          # No commit here: the workflow triggers on push to master, so the
+          # action's own push would target master, not the checked-out PR branch.
+          # Commit & push below with plain git, which pushes the PR branch.
+
+      - name: Commit & push the badge to the release PR
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        run: |
+          if git diff --quiet; then
+            echo "Badge already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: update Vibe Index badge"
+          git push
+
       # When a release is published, keep the floating major/minor tags
       # (e.g. v1, v1.2) pointing at the latest release so consumers can pin
       # `roxblnfk/vibe-index@v1`.
