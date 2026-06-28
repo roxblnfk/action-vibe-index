@@ -29,9 +29,10 @@ jobs:
           commit: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           badge-style: for-the-badge
-          # This README mentions "![Vibe Index](...)" in examples/prose, so pin
-          # discovery to the markers — markdown discovery could match a literal.
-          badge-discovery: markers
+          # Find the badge by its markdown image. Only the FIRST ![Vibe Index](…)
+          # is replaced — that's the header badge; the example badges below use a
+          # different alt text, so they are never matched.
+          badge-discovery: markdown
           # assert-index alerts (fails the run) when the score is out of range.
           assert-index: '8.0-10.0'
 
