@@ -75,7 +75,7 @@ async function run() {
 
     const badgeUrl = generateBadgeUrl({
       label: includeMessage,
-      message: `${score}/10.0`,
+      message: score,
       style: badgeStyle,
       color: finalBadgeColor,
       logo: badgeLogo,

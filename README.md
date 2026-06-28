@@ -68,7 +68,7 @@ whatever is between them):
 
 ```markdown
 <!-- vibe-index:start -->
-![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=0.0%2F10.0&color=lightgrey&style=flat-square)
+![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=0.0&color=lightgrey&style=flat-square)
 <!-- vibe-index:end -->
 ```
 
@@ -190,21 +190,21 @@ and messages are always safely URL-encoded.
 
 ### Default (flat-square)
 ```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square
 ```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square)
 
 ### For the badge
 ```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=for-the-badge
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=27ae60&style=for-the-badge
 ```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=for-the-badge)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=27ae60&style=for-the-badge)
 
 ### With a logo
 ```
-https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square&logo=github
+https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square&logo=github
 ```
-![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=3498db&style=flat-square&logo=github)
+![Badge](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5&color=3498db&style=flat-square&logo=github)
 
 ## 🎯 Color Coding
 
