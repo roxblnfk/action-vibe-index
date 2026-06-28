@@ -28,12 +28,15 @@ function replaceBadge(content, badgeMarkdown) {
   const before = content.slice(0, start + START_MARKER.length);
   const after = content.slice(end);
 
-  // Preserve the layout: if the markers were on separate lines (block style),
-  // keep the badge on its own line; if they were inline (e.g. a badge inside a
-  // single row of badges), keep it inline so the row is not broken.
-  const inner = content.slice(start + START_MARKER.length, end);
-  const isBlock = inner.includes('\n');
-  const next = isBlock
+  // GitHub (CommonMark) treats a line that *starts* with `<!--` as a raw HTML
+  // block, so markdown placed inline right after a leading marker is NOT
+  // rendered. So: when the start marker begins its own line, put the badge on
+  // its own line (a block, which renders). When something precedes the marker
+  // on the line (e.g. a row of badges), keep it inline — there the line does
+  // not start with `<!--`, so the image renders fine and the row is preserved.
+  const lineStart = content.lastIndexOf('\n', start - 1) + 1;
+  const startsLine = content.slice(lineStart, start).trim() === '';
+  const next = startsLine
     ? `${before}\n${badgeMarkdown}\n${after}`
     : `${before}${badgeMarkdown}${after}`;
 

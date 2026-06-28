@@ -33,6 +33,11 @@ inputs:
     required: false
     default: ''
 
+  badge-link:
+    description: 'URL the badge links to. Defaults to the Vibe Index repository so readers can learn what the metric means. Set to an empty string to render the badge without a link.'
+    required: false
+    default: 'https://github.com/roxblnfk/action-vibe-index'
+
   assert-index:
     description: 'Optional range for assertion (e.g., "7.0-10.0" or "5.0-8.0"). Action will fail if index is outside this range'
     required: false

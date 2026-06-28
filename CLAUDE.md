@@ -123,6 +123,7 @@ Orchestrates the analysis and outputs results.
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | auto | `auto` interpolates from the gradient by score; or a fixed hex / named color |
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
+| `badge-link` | String | repo URL | URL the badge links to (defaults to the Vibe Index repo); empty = no link |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
 | `update-files` | String | README.md | Comma/newline list of markdown files to update in place between markers |
@@ -142,6 +143,12 @@ Place markers in README.md and let the action rewrite the badge in place
 it is robust to `&`/`/` in the URL and never touches example badges elsewhere
 in the file — unlike a `sed` one-liner, where `&` is special in the
 replacement and a global pattern clobbers every badge.
+
+Layout follows the markers: when the start marker begins its own line the badge
+is written on its own line (a line starting with `<!--` is a raw HTML block on
+GitHub, where an inline image would not render); when content precedes the
+marker the badge stays inline (badge rows). The badge is wrapped in `badge-link`
+(default: the repo URL) so readers can click through to the explanation.
 
 ```markdown
 <!-- vibe-index:start -->

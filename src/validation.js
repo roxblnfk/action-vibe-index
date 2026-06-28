@@ -123,6 +123,13 @@ function validateBadgeLogo(logo) {
   return trimmed;
 }
 
+function validateBadgeLink(link) {
+  if (!link || typeof link !== 'string') {
+    return '';
+  }
+  return link.trim();
+}
+
 function validateBadgeOutputFile(file) {
   if (!file || typeof file !== 'string') {
     return '';
@@ -184,6 +191,7 @@ function validateAllInputs(inputs) {
     validated.assertIndex = validateAssertIndex(inputs.assertIndex);
     validated.includeMessage = validateIncludeMessage(inputs.includeMessage);
     validated.badgeLogo = validateBadgeLogo(inputs.badgeLogo);
+    validated.badgeLink = validateBadgeLink(inputs.badgeLink);
     validated.badgeOutputFile = validateBadgeOutputFile(inputs.badgeOutputFile);
     validated.updateFiles = validateUpdateFiles(inputs.updateFiles);
     validated.commit = validateBoolean('commit', inputs.commit);
@@ -216,6 +224,7 @@ module.exports = {
   validateAssertIndex,
   validateIncludeMessage,
   validateBadgeLogo,
+  validateBadgeLink,
   validateBadgeOutputFile,
   validateUpdateFiles,
   validateBoolean,

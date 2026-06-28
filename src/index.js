@@ -16,6 +16,7 @@ async function run() {
       badgeStyle: core.getInput('badge-style') || 'flat-square',
       badgeColor: core.getInput('badge-color') || 'auto',
       badgeLogo: core.getInput('badge-logo'),
+      badgeLink: core.getInput('badge-link'),
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
       updateFiles: core.getInput('update-files'),
@@ -40,6 +41,7 @@ async function run() {
       badgeStyle,
       badgeColor,
       badgeLogo,
+      badgeLink,
       assertIndex,
       badgeOutputFile,
       updateFiles,
@@ -79,7 +81,7 @@ async function run() {
       logo: badgeLogo,
     });
 
-    const badgeMarkdown = generateBadgeMarkdown(badgeUrl, includeMessage);
+    const badgeMarkdown = generateBadgeMarkdown(badgeUrl, includeMessage, badgeLink);
 
     core.setOutput('vibe-index', score);
     core.setOutput('human-percentage', metrics.humanPercentage.toFixed(1));

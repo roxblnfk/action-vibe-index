@@ -72,9 +72,17 @@ whatever is between them):
 <!-- vibe-index:end -->
 ```
 
-The action replaces whatever sits between the markers. Layout is preserved: if
-the markers are on their own lines (above), the badge stays a block; if they are
-**inline**, the badge stays inline — so it works inside a row of badges:
+The action replaces whatever sits between the markers. Even an empty pair works:
+
+```markdown
+<!-- vibe-index:start --><!-- vibe-index:end -->
+```
+
+Layout is chosen so the badge always renders on GitHub: when the start marker
+begins its own line, the badge is written on its own line (a line that *starts*
+with `<!--` is treated as a raw HTML block by GitHub, so an inline image there
+would not render). When other content precedes the marker, the badge stays
+inline — so it works inside a row of badges:
 
 ```markdown
 ![build](...) <!-- vibe-index:start -->![Vibe Index](...)<!-- vibe-index:end --> ![license](...)
@@ -152,6 +160,7 @@ Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `auto` | `auto` interpolates a color along the green→purple gradient from the score; or pass a fixed hex (without `#`) / named color |
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
+| `badge-link` | No | repo URL | URL the badge links to (defaults to the Vibe Index repo so readers can learn what it means). Empty = no link |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
 | `update-files` | No | `README.md` | Comma/newline-separated list of markdown files to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers. Set to empty to disable |

@@ -269,7 +269,7 @@ test('no markers -> no change', () => {
   assert.strictEqual(content, doc);
 });
 
-test('inline markers keep a row of badges on one line', () => {
+test('inline markers in a row (content precedes) stay on one line', () => {
   const doc = `![build](b.svg) ${START_MARKER}![old](old.svg)${END_MARKER} ![license](l.svg)`;
   const { content, updated } = replaceBadge(doc, NEW_BADGE);
   assert.strictEqual(updated, true);
@@ -278,6 +278,15 @@ test('inline markers keep a row of badges on one line', () => {
     content,
     `![build](b.svg) ${START_MARKER}${NEW_BADGE}${END_MARKER} ![license](l.svg)`
   );
+});
+
+test('marker pair alone on a line becomes a block so it renders on GitHub', () => {
+  // A line starting with <!-- is an HTML block on GitHub; inline markdown there
+  // would not render, so the badge must go on its own line.
+  const doc = `# t\n\n${START_MARKER}${END_MARKER}\n\ntext`;
+  const { content, updated } = replaceBadge(doc, NEW_BADGE);
+  assert.strictEqual(updated, true);
+  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge placed on its own line');
 });
 
 test('block markers keep the badge on its own line', () => {
@@ -407,6 +416,7 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
     badgeStyle: 'flat',
     badgeColor: 'blue',
     badgeLogo: 'github',
+    badgeLink: 'https://example.com/vibe',
     assertIndex: '',
     badgeOutputFile: 'badge-url.txt',
     updateFiles: 'README.md, CONTRIBUTING.md',
@@ -415,6 +425,7 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   assert.strictEqual(result.success, true);
   assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
   assert.strictEqual(result.validated.badgeLogo, 'github');
+  assert.strictEqual(result.validated.badgeLink, 'https://example.com/vibe');
   assert.strictEqual(result.validated.extraPatterns.length, 1);
   assert.ok(result.validated.extraPatterns[0] instanceof RegExp);
   assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);

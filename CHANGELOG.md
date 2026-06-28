@@ -9,10 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `badge-link` input (default: the Vibe Index repository URL) wraps the badge in
+  a link so readers can learn what the metric means; set empty to disable.
 - Built-in auto-commit: `commit`/`push` inputs (with `commit-message`,
   `commit-user-name`, `commit-user-email`) let the action commit and push the
   updated badge files itself, before the assertion, so no separate
   git-auto-commit step is required.
+
+### Fixed
+
+- A badge written inline on a line that starts with `<!--` did not render on
+  GitHub (such a line is a raw HTML block). The updater now writes the badge on
+  its own line when the start marker begins a line, and only stays inline when
+  other content precedes the marker (badge rows).
 
 ### Changed
 
