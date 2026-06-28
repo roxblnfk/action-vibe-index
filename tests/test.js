@@ -603,36 +603,51 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
 console.log('integration (action entry point)');
 
 test('badge is updated even when the assertion fails', () => {
-  const repoRoot = path.join(__dirname, '..');
-  const tmpFile = path.join(__dirname, '.tmp-assert-target.md');
+  const indexJs = path.join(__dirname, '..', 'src', 'index.js');
+  const dir = path.join(os.tmpdir(), 'vibe-assert-test');
+  const git = args => execFileSync('git', args, { cwd: dir, encoding: 'utf-8' });
+  const target = 'BADGE.md';
   const placeholder = '![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=PLACEHOLDER&color=lightgrey)';
-  fs.writeFileSync(tmpFile, `# Tmp\n${START_MARKER}\n${placeholder}\n${END_MARKER}\n`);
-
-  let status = 0;
   try {
-    // assert-index 10.0-10.0 fails for any repo that isn't 100% human, which
-    // forces the failure path; the badge must still be written first.
-    execFileSync('node', ['src/index.js'], {
-      cwd: repoRoot,
-      env: {
-        ...process.env,
-        'INPUT_COMMITS-COUNT': '50',
-        'INPUT_ASSERT-INDEX': '10.0-10.0',
-        'INPUT_UPDATE-FILES': tmpFile,
-      },
-      stdio: 'ignore',
-    });
-  } catch (err) {
-    status = err.status;
-  }
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+    fs.mkdirSync(dir, { recursive: true });
 
-  try {
-    const content = fs.readFileSync(tmpFile, 'utf-8');
+    // A deterministic repo: a single human-authored commit -> Vibe Index 0.0,
+    // so the 10.0-10.0 assertion always fails. (Running against this project's
+    // own live history made the test flaky — its score drifts with each commit
+    // and could land exactly on 10.0, which would *pass* the assertion.)
+    git(['init', '-q']);
+    git(['config', 'user.email', 'human@example.com']);
+    git(['config', 'user.name', 'Test Human']);
+    fs.writeFileSync(path.join(dir, 'code.txt'), 'a\nb\nc\n');
+    fs.writeFileSync(path.join(dir, target), `# Tmp\n${START_MARKER}\n${placeholder}\n${END_MARKER}\n`);
+    git(['add', '-A']);
+    git(['commit', '-qm', 'init']);
+
+    let status = 0;
+    try {
+      // The badge must still be written before the assertion fails the run.
+      execFileSync('node', [indexJs], {
+        cwd: dir,
+        env: {
+          ...process.env,
+          'INPUT_COMMITS-COUNT': '50',
+          'INPUT_ASSERT-INDEX': '10.0-10.0',
+          'INPUT_UPDATE-FILES': target,
+        },
+        stdio: 'ignore',
+      });
+    } catch (err) {
+      status = err.status;
+    }
+
+    const content = fs.readFileSync(path.join(dir, target), 'utf-8');
     assert.strictEqual(status, 1, 'action should fail the assertion (exit 1)');
     assert.ok(!content.includes('PLACEHOLDER'), 'badge was updated despite the failure');
     assert.ok(content.includes('shields.io/static/v1'), 'a real badge URL is present');
+    assert.ok(content.includes('<img src='), 'markers path writes HTML');
   } finally {
-    fs.unlinkSync(tmpFile);
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* ignore */ }
   }
 });
 
