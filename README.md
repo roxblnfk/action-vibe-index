@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=7.2&color=6464e5&style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI%2BPHBhdGggZD0iTTkgNCBROSAxMyAxOCAxMyBROSAxMyA5IDIyIFE5IDEzIDAgMTMgUTkgMTMgOSA0IFoiLz48cGF0aCBkPSJNMTkgMSBRMTkgNiAyNCA2IFExOSA2IDE5IDExIFExOSA2IDE0IDYgUTE5IDYgMTkgMSBaIi8%2BPHBhdGggZD0iTTIwIDE0IFEyMCAxOCAyNCAxOCBRMjAgMTggMjAgMjIgUTIwIDE4IDE2IDE4IFEyMCAxOCAyMCAxNCBaIi8%2BPC9zdmc%2B)](https://github.com/roxblnfk/action-vibe-index)
+![Vibe Index]()
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Vibe%20Index-8a2be2?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/marketplace/actions/vibe-index)
 [![Support on Boosty](https://img.shields.io/static/v1?style=for-the-badge&label=&message=Sponsorship&logo=Boosty&logoColor=white&color=%23F15F2C)](https://boosty.to/roxblnfk)
 
@@ -29,28 +29,30 @@ by human hands, **`10.0`** = pure AI, top to bottom.
 
 ## 🚀 Usage
 
-Two steps: drop the markers where you want the badge, then run the action.
+Two steps: drop the badge placeholder where you want it, then run the action.
 
-### 1. Add the markers to your README
-
-```markdown
-<!-- vibe-index:start --><!-- vibe-index:end -->
-```
-
-The action rewrites whatever is between the markers (an empty pair is fine). On
-their own line you get a standalone badge; placed after other content they keep
-the badge inline — so it also works inside a row of badges.
-
-No markers? Drop this starter line where you want the badge and set
-`badge-discovery: markdown` — the action finds it by its alt text and fills the
-URL in place (the empty link is fine; it's replaced on the first run):
+### 1. Add the badge placeholder to your README
 
 ```markdown
 ![Vibe Index]()
 ```
 
-With `auto` (the default) both the markers and the `![Vibe Index](...)` styles
-work.
+The action finds it by its `Vibe Index` alt text and fills in the URL on the
+first run (the empty link is fine). It works on its own line or inline inside a
+row of badges.
+
+<details>
+<summary>Prefer HTML comment markers?</summary>
+
+Wrap the spot in markers instead — an explicit, comment-based anchor:
+
+```markdown
+<!-- vibe-index:start --><!-- vibe-index:end -->
+```
+
+With `badge-discovery: auto` (the default) both styles are found; set it to
+`markdown` or `markers` to force one.
+</details>
 
 ### 2. Run the action
 
@@ -58,16 +60,16 @@ work.
 name: Vibe Index
 
 on:
-  push:
-    branches: [main]
-  schedule:
-    - cron: '0 0 * * 0'  # refresh weekly
+  push:                # refresh after each merge to the default branch
+  workflow_dispatch:   # ...and on demand
 
 permissions:
   contents: write  # required to commit the refreshed badge
 
 jobs:
   vibe-index:
+    # Run only on the default branch — no branch name to hardcode.
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,16 +78,27 @@ jobs:
 
       - uses: roxblnfk/action-vibe-index@v1
         with:
-          commit: true  # commit & push the updated badge in place
+          commit: true  # commit & push the refreshed badge in place
           push: true
 ```
 
-That's it — the badge refreshes itself on every run.
+This refreshes the badge whenever the default branch moves, with no branch name
+hardcoded. It's cheap: the action only commits when the score actually changes,
+and the `GITHUB_TOKEN` commit doesn't retrigger the workflow.
 
-> 💡 **Already have a release workflow?** Prefer adding a single Vibe Index step
-> to it (e.g. right after your version bump) instead of a separate workflow, so
-> the badge is refreshed as part of each release. There, leave `commit`/`push`
-> off and let your existing commit step pick up the changed file.
+> 💡 **Already have a release workflow?** That's an even better place for it — add
+> a single Vibe Index step (e.g. right after your version bump) so the badge is
+> refreshed with every release. There, leave `commit`/`push` off and let your
+> existing commit step pick up the changed file.
+
+Want fewer runs instead? Trigger on a schedule (works on any default branch too):
+
+```yaml
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # weekly
+  workflow_dispatch:
+```
 
 ## ⚙️ Configuration
 
