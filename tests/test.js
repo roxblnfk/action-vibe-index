@@ -351,6 +351,16 @@ test('markdown discovery detects an empty ![Vibe Index]() starter placeholder', 
   assert.ok(!content.includes('![Vibe Index]()'), 'empty placeholder is gone');
 });
 
+test('markdown discovery replaces the documented "Indexing Vibe" stub placeholder', () => {
+  // The README recommends a non-broken colored stub badge as the placeholder.
+  const doc = '# t\n\n![Vibe Index](https://img.shields.io/badge/Indexing%20Vibe-6168e5?style=flat-square)\n\nx';
+  const { content, updated, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
+  assert.strictEqual(found, true);
+  assert.strictEqual(updated, true);
+  assert.ok(content.includes(NEW_BADGE.markdown), 'stub filled with the real badge');
+  assert.ok(!content.includes('Indexing'), 'stub is gone');
+});
+
 test('markdown discovery replaces a link-wrapped badge whole', () => {
   const doc = '[![Vibe Index](https://x/old)](https://old-link)';
   const { content, found } = replaceBadge(doc, NEW_BADGE, 'markdown');

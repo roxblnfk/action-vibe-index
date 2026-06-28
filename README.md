@@ -34,12 +34,13 @@ Two steps: drop the badge placeholder where you want it, then run the action.
 ### 1. Add the badge placeholder to your README
 
 ```markdown
-![Vibe Index]()
+![Vibe Index](https://img.shields.io/badge/Indexing%20Vibe-6168e5?style=flat-square)
 ```
 
-The action finds it by its `Vibe Index` alt text and fills in the URL on the
-first run (the empty link is fine). It works on its own line or inline inside a
-row of badges.
+The action finds it by its `Vibe Index` alt text and swaps in the real badge on
+the first run — the stub above just renders an "Indexing Vibe" badge until then
+(an empty `![Vibe Index]()` works too, but shows a broken image meanwhile). It
+works on its own line or inline inside a row of badges.
 
 <details>
 <summary>Prefer HTML comment markers?</summary>
