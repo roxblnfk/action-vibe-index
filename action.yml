@@ -29,9 +29,9 @@ inputs:
     default: 'auto'
 
   badge-logo:
-    description: 'Optional logo on the badge: the built-in "sparkles" (AI/magic icon) or any simple-icons slug (e.g. "github")'
+    description: 'Logo on the badge: the built-in "sparkles" (AI/magic icon, default) or any simple-icons slug (e.g. "github"). Set to an empty string for no logo.'
     required: false
-    default: ''
+    default: 'sparkles'
 
   badge-link:
     description: 'URL the badge links to. Defaults to the Vibe Index repository so readers can learn what the metric means. Set to an empty string to render the badge without a link.'

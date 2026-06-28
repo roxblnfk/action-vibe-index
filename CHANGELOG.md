@@ -9,8 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Built-in `sparkles` logo: set `badge-logo: sparkles` for an AI/magic ✨ icon
-  (a large four-pointed star plus two small ones), shipped as an SVG data URI.
+- Built-in `sparkles` logo (now the **default** `badge-logo`): an AI/magic ✨
+  icon (a large four-pointed star plus two small ones), shipped as an SVG data
+  URI. Set `badge-logo` to a simple-icons slug for a different logo, or empty
+  for none.
 - `badge-link` input (default: the Vibe Index repository URL) wraps the badge in
   a link so readers can learn what the metric means; set empty to disable.
 - Built-in auto-commit: `commit`/`push` inputs (with `commit-message`,

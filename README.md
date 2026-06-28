@@ -159,7 +159,7 @@ Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
 | `extra-bot-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in bot/AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `auto` | `auto` interpolates a color along the green→purple gradient from the score; or pass a fixed hex (without `#`) / named color |
-| `badge-logo` | No | `` | Logo on the badge: the built-in `sparkles` (AI/magic ✨ icon) or a [simple-icons](https://simpleicons.org) slug (e.g. `github`) |
+| `badge-logo` | No | `sparkles` | Logo on the badge: the built-in `sparkles` (AI/magic ✨ icon, default), a [simple-icons](https://simpleicons.org) slug (e.g. `github`), or empty for none |
 | `badge-link` | No | repo URL | URL the badge links to (defaults to the Vibe Index repo so readers can learn what it means). Empty = no link |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
