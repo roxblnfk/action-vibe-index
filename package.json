@@ -1,6 +1,6 @@
 {
   "name": "vibe-index",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "GitHub Action to measure the ratio of human-written vs AI-generated code",
   "main": "src/index.js",
   "scripts": {
