@@ -6,7 +6,7 @@ const { execFileSync } = require('child_process');
 
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
 const { generateBadgeUrl, generateBadgeMarkdown, resolveLogo } = require('../src/badge');
-const { analyzeRepository, classifyCommit, buildMatchers } = require('../src/analyzer');
+const { analyzeRepository, classifyCommit, buildMatchers, isShallowRepository } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const { commitChanges } = require('../src/committer');
 const {
@@ -435,6 +435,39 @@ test('commitChanges commits changed files and applies identity (no push)', () =>
     assert.strictEqual(res2.committed, false);
   } finally {
     try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* ignore */ }
+  }
+});
+
+console.log('shallow repository detection');
+
+test('isShallowRepository distinguishes a full clone from a --depth=1 fetch', () => {
+  const base = path.join(os.tmpdir(), 'vibe-shallow-test');
+  const originDir = path.join(base, 'origin');
+  const cloneDir = path.join(base, 'clone');
+  const git = (dir, args) => execFileSync('git', args, { cwd: dir, encoding: 'utf-8' });
+  try {
+    fs.rmSync(base, { recursive: true, force: true, maxRetries: 3 });
+    fs.mkdirSync(originDir, { recursive: true });
+
+    git(originDir, ['init', '-q']);
+    git(originDir, ['config', 'user.email', 'init@example.com']);
+    git(originDir, ['config', 'user.name', 'init']);
+    for (let i = 1; i <= 4; i++) {
+      fs.writeFileSync(path.join(originDir, `f${i}`), String(i));
+      git(originDir, ['add', '-A']);
+      git(originDir, ['commit', '-qm', `commit ${i}`]);
+    }
+
+    // A full clone is not shallow.
+    git(base, ['clone', '-q', originDir, cloneDir]);
+    assert.strictEqual(isShallowRepository(cloneDir), false, 'full clone is not shallow');
+
+    // A `git fetch --depth=1` re-shallows even a complete clone — the exact
+    // footgun that silently understated the Vibe Index to 0.0 in CI.
+    git(cloneDir, ['fetch', '-q', '--depth=1', 'origin', 'master']);
+    assert.strictEqual(isShallowRepository(cloneDir), true, 'depth-1 fetch makes it shallow');
+  } finally {
+    try { fs.rmSync(base, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* ignore */ }
   }
 });
 

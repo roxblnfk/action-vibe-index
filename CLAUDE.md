@@ -117,7 +117,7 @@ Orchestrates the analysis and outputs results.
 
 | Parameter | Type | Default | Purpose |
 |-----------|------|---------|---------|
-| `commits-count` | Number | 500 | How many recent commits to analyze |
+| `commits-count` | Number | 250 | How many recent commits to analyze |
 | `co-author-multiplier` | Float (0-1) | 0.8 | Share of an AI co-authored commit credited to AI |
 | `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
@@ -216,7 +216,8 @@ Prevent merging if human code percentage drops:
    - Customizable for different team philosophies
 
 3. **Recent Commits Only**
-   - Default 500 commits (~1-3 months for active projects)
+   - Default 250 commits — a "how we write now" window that stays responsive
+     to a shift in methodology rather than averaging over a long tail
    - Prevents old AI experiments from skewing current metrics
    - Configurable to look at different time windows
 

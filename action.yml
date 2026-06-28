@@ -4,9 +4,9 @@ author: 'Aleksei Gagarin'
 
 inputs:
   commits-count:
-    description: 'Number of recent commits to analyze (default: 500)'
+    description: 'Number of recent commits to analyze (default: 250)'
     required: false
-    default: '500'
+    default: '250'
 
   co-author-multiplier:
     description: 'Multiplier for co-authored code (0.0 to 1.0, default: 0.8) — share of an AI co-authored commit credited to AI'

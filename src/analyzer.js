@@ -155,6 +155,29 @@ function parseNumstat(numstat) {
 }
 
 /**
+ * Report whether the current git repository is shallow (its history was
+ * truncated by a `--depth` clone/fetch). A shallow repo silently starves the
+ * analysis of commits beyond the boundary, understating the Vibe Index — the
+ * single most common cause of an unexpectedly low (often 0.0) score in CI.
+ *
+ * Returns false if the check can't be made (very old git, not a repo): the
+ * analysis still runs, we just don't warn.
+ *
+ * @returns {boolean}
+ */
+function isShallowRepository(cwd) {
+  try {
+    const out = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
+      encoding: 'utf-8',
+      ...(cwd ? { cwd } : {}),
+    });
+    return out.trim() === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Combine the curated, built-in bot signatures with the user's extra regexes.
  *
  * @param {RegExp[]} [extraPatterns]
@@ -205,4 +228,5 @@ module.exports = {
   getRecentCommits,
   classifyCommit,
   buildMatchers,
+  isShallowRepository,
 };

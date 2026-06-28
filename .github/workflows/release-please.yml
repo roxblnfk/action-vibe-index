@@ -24,7 +24,7 @@ jobs:
       # release PR exists; the badge change is reviewed and merged with it.
       - name: Checkout release PR branch
         if: ${{ steps.release.outputs.prs_created == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
           fetch-depth: 0
@@ -54,7 +54,7 @@ jobs:
       # When a release is published, keep the floating major/minor tags
       # (e.g. v1, v1.2) pointing at the latest release so consumers can pin
       # `roxblnfk/vibe-index@v1`.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created }}
         with:
           fetch-depth: 0

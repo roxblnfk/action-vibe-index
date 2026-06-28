@@ -1,6 +1,6 @@
 const fs = require('fs');
 const core = require('./core');
-const { analyzeRepository } = require('./analyzer');
+const { analyzeRepository, isShallowRepository } = require('./analyzer');
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('./calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
 const { updateBadgeInFile } = require('./updater');
@@ -10,7 +10,7 @@ const { validateAllInputs } = require('./validation');
 async function run() {
   try {
     const rawInputs = {
-      commitsCount: core.getInput('commits-count') || '500',
+      commitsCount: core.getInput('commits-count') || '250',
       coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.8',
       extraPatterns: core.getInput('extra-bot-patterns'),
       badgeStyle: core.getInput('badge-style') || 'flat-square',
@@ -59,6 +59,18 @@ async function run() {
     core.info(`  Commits to analyze: ${commitsCount}`);
     core.info(`  Co-author multiplier: ${coAuthorMultiplier}`);
     core.info(`  Extra bot patterns: ${extraPatterns.length ? extraPatterns.map(re => re.source).join(', ') : '(none)'}`);
+
+    // A shallow checkout truncates history, so the analysis sees only the
+    // commits past the boundary and silently understates the score (often 0.0).
+    // Warn loudly rather than fail — the run still produces a (skewed) badge.
+    if (isShallowRepository()) {
+      core.warning(
+        'The git repository is shallow: history is truncated, so the Vibe Index ' +
+        'may be understated (commits beyond the shallow boundary are invisible). ' +
+        'Use actions/checkout with "fetch-depth: 0", and avoid running ' +
+        '"git fetch --depth=..." before this step (it re-shallows a full clone).'
+      );
+    }
 
     const analysis = await analyzeRepository({
       commitsCount,

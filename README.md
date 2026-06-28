@@ -72,7 +72,7 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # the action needs full git history
 
@@ -108,7 +108,7 @@ Every option with its default — keep only what you need:
 - uses: roxblnfk/action-vibe-index@v1
   with:
     # ─── analysis ───
-    commits-count: '500'          # how many recent (non-merge) commits to scan
+    commits-count: '250'          # how many recent (non-merge) commits to scan
     co-author-multiplier: '0.8'   # AI share of a co-authored commit, 0..1 (0.8 = 80% AI / 20% human)
     extra-bot-patterns: |         # extra regexes (one per line) matched against the commit
       @my-company-bot\.com        # author and Co-Authored-By identities, merged on top of the
@@ -246,6 +246,11 @@ purple for fully vibe-coded. Set a fixed hex or named color to opt out.
 
 - **"Failed to get git commits"** — set `fetch-depth: 0` on `actions/checkout`,
   so the action sees the full history.
+- **The score is unexpectedly low (often `0.0`)** — the repository is most
+  likely shallow, so the action only sees a slice of history. Set
+  `fetch-depth: 0` on `actions/checkout`, and make sure no earlier step runs
+  `git fetch --depth=…` — that **re-shallows even a full clone** and starves
+  this step of history. The action warns when it detects a shallow repo.
 - **The badge doesn't update / isn't committed** — enable `commit: true`
   (and `push: true`) and grant `permissions: contents: write`, or commit the
   changed file with your own step.
