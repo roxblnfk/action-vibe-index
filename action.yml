@@ -48,6 +48,31 @@ inputs:
     required: false
     default: 'README.md'
 
+  commit:
+    description: 'Commit the updated files automatically (requires permissions: contents: write). Default false.'
+    required: false
+    default: 'false'
+
+  push:
+    description: 'Push the auto-commit to the current branch (only used when commit is true). Default false.'
+    required: false
+    default: 'false'
+
+  commit-message:
+    description: 'Commit message used by the auto-commit'
+    required: false
+    default: 'chore: update Vibe Index badge'
+
+  commit-user-name:
+    description: 'git user.name for the auto-commit'
+    required: false
+    default: 'github-actions[bot]'
+
+  commit-user-email:
+    description: 'git user.email for the auto-commit'
+    required: false
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+
   include-message:
     description: 'Custom message/label for badge (default: "Vibe Index")'
     required: false

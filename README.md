@@ -80,9 +80,8 @@ the markers are on their own lines (above), the badge stays a block; if they are
 ![build](...) <!-- vibe-index:start -->![Vibe Index](...)<!-- vibe-index:end --> ![license](...)
 ```
 
-Then let the action keep them up to date and commit the change. The action
-updates `README.md` by default; pass `update-files` to target a different set
-of files:
+The action updates `README.md` by default and can commit & push the change
+itself (`commit`/`push`), so no extra step is needed:
 
 ```yaml
 name: Update Vibe Index Badge
@@ -94,7 +93,7 @@ on:
     - cron: '0 0 * * 0'  # Weekly
 
 permissions:
-  contents: write
+  contents: write  # required for commit/push
 
 jobs:
   vibe:
@@ -105,15 +104,14 @@ jobs:
           fetch-depth: 0  # required: the action needs full commit history
 
       - uses: roxblnfk/vibe-index@v1
-        # update-files defaults to README.md; the badge between the markers is
-        # rewritten in place. Use e.g. update-files: 'README.md, docs/index.md'
-        # to target several files.
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'chore: update Vibe Index badge'
-          file_pattern: 'README.md'
+          # update-files defaults to README.md (badge rewritten between markers)
+          commit: true
+          push: true
 ```
+
+Prefer a dedicated commit step instead? Leave `commit`/`push` off and pass the
+updated file to e.g. `stefanzweifel/git-auto-commit-action`.
 
 ### Example 2: Comment on Pull Requests
 
@@ -157,6 +155,11 @@ Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
 | `update-files` | No | `README.md` | Comma/newline-separated list of markdown files to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers. Set to empty to disable |
+| `commit` | No | `false` | Commit the updated files automatically (needs `permissions: contents: write`) |
+| `push` | No | `false` | Push the auto-commit to the current branch (used with `commit`) |
+| `commit-message` | No | `chore: update Vibe Index badge` | Message for the auto-commit |
+| `commit-user-name` | No | `github-actions[bot]` | `git user.name` for the auto-commit |
+| `commit-user-email` | No | `…github-actions[bot]@users.noreply.github.com` | `git user.email` for the auto-commit |
 | `include-message` | No | `Vibe Index` | Custom label for badge |
 
 ## 📤 Outputs

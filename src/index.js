@@ -4,6 +4,7 @@ const { analyzeRepository } = require('./analyzer');
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('./calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
 const { updateBadgeInFile } = require('./updater');
+const { commitChanges } = require('./committer');
 const { validateAllInputs } = require('./validation');
 
 async function run() {
@@ -18,6 +19,11 @@ async function run() {
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
       updateFiles: core.getInput('update-files'),
+      commit: core.getInput('commit'),
+      push: core.getInput('push'),
+      commitMessage: core.getInput('commit-message'),
+      commitUserName: core.getInput('commit-user-name'),
+      commitUserEmail: core.getInput('commit-user-email'),
       includeMessage: core.getInput('include-message') || 'Vibe Index',
     };
 
@@ -37,6 +43,11 @@ async function run() {
       assertIndex,
       badgeOutputFile,
       updateFiles,
+      commit,
+      push,
+      commitMessage,
+      commitUserName,
+      commitUserEmail,
       includeMessage,
     } = validation.validated;
 
@@ -92,21 +103,50 @@ async function run() {
       core.info(`Badge URL written to: ${badgeOutputFile}`);
     }
 
+    const changedFiles = [];
     for (const file of updateFiles) {
       const result = updateBadgeInFile(file, badgeMarkdown);
       if (!result.ok) {
         core.warning(`Could not update ${file}: ${result.reason}`);
       } else if (result.changed) {
+        changedFiles.push(file);
         core.info(`Updated badge in: ${file}`);
       } else {
         core.info(`Badge in ${file} already up to date.`);
       }
     }
 
+    // Optional auto-commit. Runs before the assertion so the badge is persisted
+    // even when the score is out of range and the action fails.
+    if (commit) {
+      if (changedFiles.length === 0) {
+        core.info('Auto-commit: nothing changed, skipping.');
+      } else {
+        try {
+          const result = commitChanges({
+            files: changedFiles,
+            message: commitMessage,
+            userName: commitUserName,
+            userEmail: commitUserEmail,
+            push,
+          });
+          if (result.pushed) {
+            core.info(`Auto-commit: committed and pushed to ${result.branch}.`);
+          } else if (result.committed) {
+            core.info('Auto-commit: committed' + (push ? ` (push skipped: ${result.reason})` : '.'));
+          } else {
+            core.info(`Auto-commit: ${result.reason}.`);
+          }
+        } catch (error) {
+          core.warning(`Auto-commit failed: ${error.message}`);
+        }
+      }
+    }
+
     // IMPORTANT: the assertion must stay last. All side effects (outputs, the
-    // badge file, and the README updates above) must run *before* it, so the
-    // badge is always refreshed even when the score is out of range and the
-    // action fails.
+    // badge file, the README updates, and the auto-commit above) must run
+    // *before* it, so the badge is always refreshed and committed even when the
+    // score is out of range and the action fails.
     if (assertIndex) {
       const { min, max } = assertIndex;
       if (vibeIndex < min || vibeIndex > max) {

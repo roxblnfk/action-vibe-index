@@ -19,6 +19,7 @@ src/
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
   updater.js                  # In-place README badge update (marker-based)
+  committer.js                # Optional git commit/push of updated files
   validation.js               # Input parsing and validation
 
 tests/
@@ -108,7 +109,7 @@ Orchestrates the analysis and outputs results.
 - Generates badge
 - Handles assertions
 - Sets GitHub Actions outputs
-- Writes to files if specified
+- Updates badge in files, optionally commits/pushes them (before the assertion)
 
 ## Configuration
 
@@ -125,6 +126,8 @@ Orchestrates the analysis and outputs results.
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
 | `update-files` | String | README.md | Comma/newline list of markdown files to update in place between markers |
+| `commit` / `push` | Bool | false | Auto-commit (and push) the updated files |
+| `commit-message` / `commit-user-name` / `commit-user-email` | String | bot defaults | Identity/message for the auto-commit |
 | `include-message` | String | Vibe Index | Badge label text |
 
 ### Output Parameters
@@ -146,18 +149,21 @@ replacement and a global pattern clobbers every badge.
 <!-- vibe-index:end -->
 ```
 
-`update-files` defaults to `README.md`; pass a comma/newline list to target
-several files, or an empty string to disable.
+`update-files` defaults to `README.md`. The action can commit & push the change
+itself (`committer.js`) — this runs *before* the assertion, so the badge is
+persisted even when the gate fails; no separate commit step is needed.
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
     update-files: 'README.md, docs/index.md'
-- uses: stefanzweifel/git-auto-commit-action@v5
-  with:
-    commit_message: 'chore: update Vibe Index badge'
-    file_pattern: 'README.md docs/index.md'
+    commit: true
+    push: true   # needs permissions: contents: write
 ```
+
+The auto-commit sets a local git identity, stages only the changed files
+(skipping an empty commit), and pushes to the branch from `GITHUB_HEAD_REF` /
+`GITHUB_REF_NAME`. Failures are surfaced as warnings, not hard errors.
 
 ### 2. **PR Comment**
 Comment Vibe Index on each pull request:

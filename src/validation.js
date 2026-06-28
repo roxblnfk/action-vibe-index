@@ -130,6 +130,23 @@ function validateBadgeOutputFile(file) {
   return file.trim();
 }
 
+function validateBoolean(name, value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return false;
+  }
+  const v = String(value).trim().toLowerCase();
+  if (v === 'true') return true;
+  if (v === 'false') return false;
+  throw new Error(`${name} must be "true" or "false". Got: "${value}"`);
+}
+
+function validateNonEmpty(value, fallback) {
+  if (!value || typeof value !== 'string' || value.trim() === '') {
+    return fallback;
+  }
+  return value.trim();
+}
+
 function validateUpdateFiles(files) {
   if (!files || typeof files !== 'string') {
     return [];
@@ -169,6 +186,14 @@ function validateAllInputs(inputs) {
     validated.badgeLogo = validateBadgeLogo(inputs.badgeLogo);
     validated.badgeOutputFile = validateBadgeOutputFile(inputs.badgeOutputFile);
     validated.updateFiles = validateUpdateFiles(inputs.updateFiles);
+    validated.commit = validateBoolean('commit', inputs.commit);
+    validated.push = validateBoolean('push', inputs.push);
+    validated.commitMessage = validateNonEmpty(inputs.commitMessage, 'chore: update Vibe Index badge');
+    validated.commitUserName = validateNonEmpty(inputs.commitUserName, 'github-actions[bot]');
+    validated.commitUserEmail = validateNonEmpty(
+      inputs.commitUserEmail,
+      '41898282+github-actions[bot]@users.noreply.github.com'
+    );
 
     return {
       success: true,
@@ -193,5 +218,6 @@ module.exports = {
   validateBadgeLogo,
   validateBadgeOutputFile,
   validateUpdateFiles,
+  validateBoolean,
   validateAllInputs,
 };

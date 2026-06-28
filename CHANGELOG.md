@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Built-in auto-commit: `commit`/`push` inputs (with `commit-message`,
+  `commit-user-name`, `commit-user-email`) let the action commit and push the
+  updated badge files itself, before the assertion, so no separate
+  git-auto-commit step is required.
+
 ### Changed
 
 - `co-author-multiplier` default changed from `0.5` to `0.8` (an AI co-authored

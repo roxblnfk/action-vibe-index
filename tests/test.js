@@ -1,5 +1,6 @@
 const assert = require('assert');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -7,6 +8,7 @@ const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require
 const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
 const { analyzeRepository, classifyCommit, buildMatchers } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
+const { commitChanges } = require('../src/committer');
 const {
   validateCommitsCount,
   validateCoAuthorMultiplier,
@@ -15,6 +17,7 @@ const {
   validateBadgeColor,
   validateAssertIndex,
   validateUpdateFiles,
+  validateBoolean,
   validateAllInputs,
 } = require('../src/validation');
 
@@ -283,7 +286,60 @@ test('block markers keep the badge on its own line', () => {
   assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge stays on its own line');
 });
 
+console.log('committer (temp git repo)');
+
+test('commitChanges commits changed files and applies identity (no push)', () => {
+  const dir = path.join(os.tmpdir(), 'vibe-commit-test');
+  const run = args => execFileSync('git', args, { cwd: dir, encoding: 'utf-8' });
+  try {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+    fs.mkdirSync(dir, { recursive: true });
+    run(['init', '-q']);
+    run(['config', 'user.email', 'init@example.com']);
+    run(['config', 'user.name', 'init']);
+    fs.writeFileSync(path.join(dir, 'README.md'), 'start');
+    run(['add', '-A']);
+    run(['commit', '-qm', 'init']);
+
+    // Change the file, then auto-commit it.
+    fs.writeFileSync(path.join(dir, 'README.md'), 'changed');
+    const res = commitChanges({
+      files: ['README.md'],
+      message: 'chore: update Vibe Index badge',
+      userName: 'github-actions[bot]',
+      userEmail: 'bot@example.com',
+      push: false,
+      cwd: dir,
+    });
+    assert.strictEqual(res.committed, true);
+    assert.strictEqual(res.pushed, false);
+    assert.ok(run(['log', '--oneline']).includes('update Vibe Index badge'));
+    assert.strictEqual(run(['log', '-1', '--format=%an']).trim(), 'github-actions[bot]');
+
+    // Nothing changed -> no empty commit.
+    const res2 = commitChanges({
+      files: ['README.md'],
+      message: 'noop',
+      userName: 'x',
+      userEmail: 'x@e',
+      push: false,
+      cwd: dir,
+    });
+    assert.strictEqual(res2.committed, false);
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* ignore */ }
+  }
+});
+
 console.log('validation');
+
+test('boolean parsing', () => {
+  assert.strictEqual(validateBoolean('commit', 'true'), true);
+  assert.strictEqual(validateBoolean('commit', 'FALSE'), false);
+  assert.strictEqual(validateBoolean('commit', ''), false);
+  assert.strictEqual(validateBoolean('commit', undefined), false);
+  assert.throws(() => validateBoolean('commit', 'yes'));
+});
 
 test('commits-count parsing and bounds', () => {
   assert.strictEqual(validateCommitsCount('500'), 500);
@@ -362,6 +418,11 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   assert.strictEqual(result.validated.extraPatterns.length, 1);
   assert.ok(result.validated.extraPatterns[0] instanceof RegExp);
   assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);
+  // commit options default off / to sane values when omitted
+  assert.strictEqual(result.validated.commit, false);
+  assert.strictEqual(result.validated.push, false);
+  assert.strictEqual(result.validated.commitMessage, 'chore: update Vibe Index badge');
+  assert.strictEqual(result.validated.commitUserName, 'github-actions[bot]');
 });
 
 console.log('integration (action entry point)');

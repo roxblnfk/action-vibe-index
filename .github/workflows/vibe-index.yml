@@ -17,24 +17,19 @@ jobs:
         with:
           fetch-depth: 0  # full history is required for analysis
 
-      - name: Calculate Vibe Index and update README badge
+      - name: Calculate Vibe Index, update and commit README badge
         id: vibe
         uses: ./
         with:
           # update-files defaults to README.md: the badge between the markers is
           # rewritten in place.
-          # assert-index alerts (fails the run) when the score drops below 8.0.
+          # commit/push persist the refreshed badge (only on push to master).
+          # The commit happens before the assertion, so the badge is committed
+          # even when the gate fails. GITHUB_TOKEN commits don't retrigger CI.
+          commit: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          # assert-index alerts (fails the run) when the score is out of range.
           assert-index: '8.0-10.0'
-
-      # Persist the refreshed badge even when the assertion fails, so README
-      # always reflects the current score. Only commits on push to master; the
-      # GITHUB_TOKEN commit does not retrigger this workflow.
-      - name: Commit updated badge
-        if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'chore: update Vibe Index badge'
-          file_pattern: 'README.md'
 
       - name: Summary
         if: ${{ always() }}
