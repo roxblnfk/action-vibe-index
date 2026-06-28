@@ -54,6 +54,11 @@ function validateBadgeStyle(style) {
 }
 
 function validateBadgeColor(color) {
+  // "auto" means: derive the color from the score along the gradient.
+  if (color.toLowerCase() === 'auto') {
+    return 'auto';
+  }
+
   // Accept hex color without # or named colors
   if (/^[0-9a-fA-F]{6}$/.test(color)) {
     return color;
@@ -71,7 +76,7 @@ function validateBadgeColor(color) {
   }
 
   throw new Error(
-    `badge-color must be a 6-digit hex code (without #) or a valid named color. Got: "${color}"`
+    `badge-color must be "auto", a 6-digit hex code (without #) or a valid named color. Got: "${color}"`
   );
 }
 

@@ -81,14 +81,10 @@ Higher = more AI/vibe: 10.0 = fully AI, 0.0 = fully hand-written (AI-less).
 - 60%: Code lines (lines added/removed)
 - 40%: Commits (commit authorship)
 
-**Color Mapping (higher = more AI):**
-- 8-10: Red (e74c3c, AI-Heavy)
-- 6-8: Orange (e67e22, AI-Assisted)
-- 4-6: Yellow (f39c12, Balanced)
-- 2-4: Blue (3498db, Human-Focused)
-- 0-2: Green (27ae60, Hand-Crafted)
-
-Auto-coloring only applies while `badge-color` is left at its default.
+**Color (continuous gradient, higher = more AI):** `getColorForIndex` interpolates
+along a green → festive purple ramp at the exact score
+(`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`). Used when `badge-color: auto`
+(the default); the same stops back the gradient in `docs/vibe-scale.svg`.
 
 #### 3. **badge.js** - Badge Generation
 Generates shields.io URLs and markdown using the `static/v1` endpoint, so the
@@ -124,7 +120,7 @@ Orchestrates the analysis and outputs results.
 | `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
 | `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
-| `badge-color` | String | 3498db | Badge color (hex); auto-picked from score when left at default |
+| `badge-color` | String | auto | `auto` interpolates from the gradient by score; or a fixed hex / named color |
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |

@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Badge color is now a continuous green → festive purple gradient** instead of
+  5 discrete buckets: `getColorForIndex` interpolates the exact color from the
+  score (`#27ae60 → #1abc9c → #3498db → #6c5ce7 → #8a2be2`). The `badge-color`
+  default changed from `3498db` to `auto`; the README scale (`docs/vibe-scale.svg`)
+  uses the same gradient.
 - **Vibe Index scale inverted to match its meaning**: `10.0` now means fully
   AI/"vibe-coded" and `0.0` means fully hand-written. The formula uses the AI
   ratios — `(ai_code_ratio × 0.6 + ai_commits_ratio × 0.4) × 10` — and the

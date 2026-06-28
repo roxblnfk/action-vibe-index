@@ -39,23 +39,43 @@ function calculateVibeIndex(analysis) {
   };
 }
 
+// Continuous color ramp: green (hand-crafted, 0) -> festive purple (AI, 10).
+// Keep these stops in sync with the gradient in docs/vibe-scale.svg.
+const GRADIENT_STOPS = [
+  { at: 0, rgb: [0x27, 0xae, 0x60] },    // green
+  { at: 0.25, rgb: [0x1a, 0xbc, 0x9c] }, // teal
+  { at: 0.5, rgb: [0x34, 0x98, 0xdb] },  // blue
+  { at: 0.75, rgb: [0x6c, 0x5c, 0xe7] }, // indigo
+  { at: 1, rgb: [0x8a, 0x2b, 0xe2] },    // festive purple
+];
+
 /**
- * Get color for Vibe Index score. Higher index = more AI/vibe.
- * 8-10: Red (AI-heavy)
- * 6-8: Orange (AI-assisted)
- * 4-6: Yellow (balanced)
- * 2-4: Blue (human-focused)
- * 0-2: Green (hand-crafted / AI-less)
+ * Get the badge color for a Vibe Index score by interpolating along the
+ * green -> purple gradient (continuous, not bucketed). Higher index = more AI.
  *
  * @param {number} vibeIndex - Score from 0-10
- * @returns {string} Hex color code
+ * @returns {string} 6-digit hex color (no '#')
  */
 function getColorForIndex(vibeIndex) {
-  if (vibeIndex >= 8) return 'e74c3c'; // Red
-  if (vibeIndex >= 6) return 'e67e22'; // Orange
-  if (vibeIndex >= 4) return 'f39c12'; // Yellow
-  if (vibeIndex >= 2) return '3498db'; // Blue
-  return '27ae60'; // Green
+  const t = Math.max(0, Math.min(1, vibeIndex / 10));
+
+  let lo = GRADIENT_STOPS[0];
+  let hi = GRADIENT_STOPS[GRADIENT_STOPS.length - 1];
+  for (let i = 0; i < GRADIENT_STOPS.length - 1; i++) {
+    if (t >= GRADIENT_STOPS[i].at && t <= GRADIENT_STOPS[i + 1].at) {
+      lo = GRADIENT_STOPS[i];
+      hi = GRADIENT_STOPS[i + 1];
+      break;
+    }
+  }
+
+  const span = hi.at - lo.at;
+  const f = span === 0 ? 0 : (t - lo.at) / span;
+  const channel = i => Math.round(lo.rgb[i] + (hi.rgb[i] - lo.rgb[i]) * f);
+
+  return [channel(0), channel(1), channel(2)]
+    .map(v => v.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 /**

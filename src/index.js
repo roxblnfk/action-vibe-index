@@ -6,8 +6,6 @@ const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
 const { updateBadgeInFile } = require('./updater');
 const { validateAllInputs } = require('./validation');
 
-const DEFAULT_BADGE_COLOR = '3498db';
-
 async function run() {
   try {
     const rawInputs = {
@@ -15,7 +13,7 @@ async function run() {
       coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.5',
       extraPatterns: core.getInput('extra-bot-patterns'),
       badgeStyle: core.getInput('badge-style') || 'flat-square',
-      badgeColor: core.getInput('badge-color') || DEFAULT_BADGE_COLOR,
+      badgeColor: core.getInput('badge-color') || 'auto',
       badgeLogo: core.getInput('badge-logo'),
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
@@ -56,8 +54,9 @@ async function run() {
     const { vibeIndex, metrics } = calculateVibeIndex(analysis);
     const score = vibeIndex.toFixed(1);
 
-    // Auto-pick a color based on the score when the user kept the default.
-    const finalBadgeColor = badgeColor === DEFAULT_BADGE_COLOR
+    // "auto" (the default) picks a color from the green->purple gradient at the
+    // exact score; any explicit color is used as-is.
+    const finalBadgeColor = badgeColor === 'auto'
       ? getColorForIndex(vibeIndex)
       : badgeColor;
 

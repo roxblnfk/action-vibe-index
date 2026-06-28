@@ -24,9 +24,9 @@ inputs:
     default: 'flat-square'
 
   badge-color:
-    description: 'Badge color (hex without #, or standard color name). When left at the default, the color is chosen automatically from the score'
+    description: 'Badge color: "auto" (default) interpolates a color along the green->purple gradient from the score, or pass a fixed hex (without #) / named color'
     required: false
-    default: '3498db'
+    default: 'auto'
 
   badge-logo:
     description: 'Optional logo to show on the badge (a simple-icons slug, e.g. "github")'

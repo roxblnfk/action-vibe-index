@@ -85,12 +85,23 @@ test('weighting 60/40 (ai code 20%, ai commits 70%)', () => {
   approx(vibeIndex, 4, 'vibeIndex');
 });
 
-test('color mapping by score (higher = more AI)', () => {
-  assert.strictEqual(getColorForIndex(9), 'e74c3c'); // AI-heavy -> red
-  assert.strictEqual(getColorForIndex(7), 'e67e22');
-  assert.strictEqual(getColorForIndex(5), 'f39c12');
-  assert.strictEqual(getColorForIndex(3), '3498db');
-  assert.strictEqual(getColorForIndex(1), '27ae60'); // hand-crafted -> green
+test('color is interpolated along the green->purple gradient', () => {
+  // Exact gradient stops at 0, 2.5, 5, 7.5, 10.
+  assert.strictEqual(getColorForIndex(0), '27ae60');   // green (hand-crafted)
+  assert.strictEqual(getColorForIndex(2.5), '1abc9c'); // teal
+  assert.strictEqual(getColorForIndex(5), '3498db');   // blue
+  assert.strictEqual(getColorForIndex(7.5), '6c5ce7'); // indigo
+  assert.strictEqual(getColorForIndex(10), '8a2be2');  // festive purple
+
+  // Between stops it blends: index 1.25 sits between green and teal.
+  const mid = getColorForIndex(1.25);
+  assert.ok(/^[0-9a-f]{6}$/.test(mid), 'returns 6-digit lowercase hex');
+  assert.notStrictEqual(mid, '27ae60');
+  assert.notStrictEqual(mid, '1abc9c');
+
+  // Out-of-range clamps to the ends.
+  assert.strictEqual(getColorForIndex(-5), '27ae60');
+  assert.strictEqual(getColorForIndex(99), '8a2be2');
 });
 
 test('description by score (higher = more AI)', () => {
@@ -272,7 +283,9 @@ test('badge-style allow-list', () => {
   assert.throws(() => validateBadgeStyle('rounded'));
 });
 
-test('badge-color hex and named', () => {
+test('badge-color auto, hex and named', () => {
+  assert.strictEqual(validateBadgeColor('auto'), 'auto');
+  assert.strictEqual(validateBadgeColor('AUTO'), 'auto');
   assert.strictEqual(validateBadgeColor('27ae60'), '27ae60');
   assert.strictEqual(validateBadgeColor('blue'), 'blue');
   assert.throws(() => validateBadgeColor('#27ae60'));

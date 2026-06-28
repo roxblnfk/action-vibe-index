@@ -140,7 +140,7 @@ Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
 | `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
 | `extra-bot-patterns` | No | `` | Extra regexes (one per line) matched against commit identities, merged on top of the built-in bot/AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
-| `badge-color` | No | `3498db` | Badge color (hex without `#` or color name). When left at the default, the color is picked automatically from the score |
+| `badge-color` | No | `auto` | `auto` interpolates a color along the green→purple gradient from the score; or pass a fixed hex (without `#`) / named color |
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
@@ -184,15 +184,14 @@ https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=349
 
 ## 🎯 Color Coding
 
-Colors automatically adjust based on Vibe Index (higher = more AI):
-- **Red (e74c3c)**: 8.0-10.0 (AI-Heavy)
-- **Orange (e67e22)**: 6.0-7.9 (AI-Assisted)
-- **Yellow (f39c12)**: 4.0-5.9 (Balanced)
-- **Blue (3498db)**: 2.0-3.9 (Human-Focused)
-- **Green (27ae60)**: 0.0-1.9 (Hand-Crafted)
+With `badge-color: auto` (the default), the badge color is interpolated along a
+**continuous green → festive purple gradient** at the exact score — green for
+hand-crafted, purple for fully AI/vibe-coded:
 
-Automatic coloring only applies while `badge-color` is left at its default. Set
-`badge-color` explicitly to always use a fixed color.
+![Vibe Index scale](docs/vibe-scale.svg)
+
+The ramp runs through `#27ae60` → `#1abc9c` → `#3498db` → `#6c5ce7` → `#8a2be2`.
+Set `badge-color` to a fixed hex or named color to opt out of auto-coloring.
 
 ## 🔍 How Commits are Classified
 
