@@ -73,19 +73,20 @@ Transforms raw metrics into a 0-10 score.
 
 **Formula:**
 ```
-Vibe Index = (human_code_ratio × 0.6 + human_commits_ratio × 0.4) × 10
+Vibe Index = (ai_code_ratio × 0.6 + ai_commits_ratio × 0.4) × 10
 ```
+Higher = more AI/vibe: 10.0 = fully AI, 0.0 = fully hand-written (AI-less).
 
 **Weighting:**
 - 60%: Code lines (lines added/removed)
 - 40%: Commits (commit authorship)
 
-**Color Mapping:**
-- 8-10: Green (27ae60, Very Human-Centric)
-- 6-8: Blue (3498db, Human-Focused)
+**Color Mapping (higher = more AI):**
+- 8-10: Red (e74c3c, AI-Heavy)
+- 6-8: Orange (e67e22, AI-Assisted)
 - 4-6: Yellow (f39c12, Balanced)
-- 2-4: Orange (e67e22, AI-Assisted)
-- 0-2: Red (e74c3c, AI-Heavy)
+- 2-4: Blue (3498db, Human-Focused)
+- 0-2: Green (27ae60, Hand-Crafted)
 
 Auto-coloring only applies while `badge-color` is left at its default.
 

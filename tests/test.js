@@ -44,24 +44,24 @@ const HUMAN = 'Alexei Gagarin <alexei.gagarin@example.com>';
 
 console.log('calculator');
 
-test('100% human -> 10.0', () => {
+test('100% human -> 0.0 (AI-less)', () => {
   const { vibeIndex } = calculateVibeIndex({
     humanPercentage: 100,
     aiPercentage: 0,
     humanCommitsPercentage: 100,
     aiCommitsPercentage: 0,
   });
-  approx(vibeIndex, 10, 'vibeIndex');
+  approx(vibeIndex, 0, 'vibeIndex');
 });
 
-test('100% AI -> 0.0', () => {
+test('100% AI -> 10.0 (max vibe)', () => {
   const { vibeIndex } = calculateVibeIndex({
     humanPercentage: 0,
     aiPercentage: 100,
     humanCommitsPercentage: 0,
     aiCommitsPercentage: 100,
   });
-  approx(vibeIndex, 0, 'vibeIndex');
+  approx(vibeIndex, 10, 'vibeIndex');
 });
 
 test('50/50 -> 5.0', () => {
@@ -74,28 +74,28 @@ test('50/50 -> 5.0', () => {
   approx(vibeIndex, 5, 'vibeIndex');
 });
 
-test('weighting 60/40 (code 80%, commits 30%)', () => {
+test('weighting 60/40 (ai code 20%, ai commits 70%)', () => {
   const { vibeIndex } = calculateVibeIndex({
     humanPercentage: 80,
     aiPercentage: 20,
     humanCommitsPercentage: 30,
     aiCommitsPercentage: 70,
   });
-  // 0.8 * 0.6 + 0.3 * 0.4 = 0.6 -> 6.0
-  approx(vibeIndex, 6, 'vibeIndex');
+  // 0.2 * 0.6 + 0.7 * 0.4 = 0.4 -> 4.0
+  approx(vibeIndex, 4, 'vibeIndex');
 });
 
-test('color mapping by score', () => {
-  assert.strictEqual(getColorForIndex(9), '27ae60');
-  assert.strictEqual(getColorForIndex(7), '3498db');
+test('color mapping by score (higher = more AI)', () => {
+  assert.strictEqual(getColorForIndex(9), 'e74c3c'); // AI-heavy -> red
+  assert.strictEqual(getColorForIndex(7), 'e67e22');
   assert.strictEqual(getColorForIndex(5), 'f39c12');
-  assert.strictEqual(getColorForIndex(3), 'e67e22');
-  assert.strictEqual(getColorForIndex(1), 'e74c3c');
+  assert.strictEqual(getColorForIndex(3), '3498db');
+  assert.strictEqual(getColorForIndex(1), '27ae60'); // hand-crafted -> green
 });
 
-test('description by score', () => {
-  assert.strictEqual(getDescriptionForIndex(9), 'Very Human-Centric');
-  assert.strictEqual(getDescriptionForIndex(0), 'AI-Heavy');
+test('description by score (higher = more AI)', () => {
+  assert.strictEqual(getDescriptionForIndex(9), 'AI-Heavy');
+  assert.strictEqual(getDescriptionForIndex(0), 'Hand-Crafted');
 });
 
 console.log('badge');

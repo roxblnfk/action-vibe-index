@@ -11,7 +11,7 @@ Measure the ratio of human-written code vs AI-generated code in your repository 
 **Vibe Index** is a metric that analyzes your repository's commit history to determine:
 - What percentage of code was written by humans
 - What percentage was written or assisted by AI
-- A combined score from 0.0 to 10.0 (where 10.0 = 100% human-written)
+- A combined score from 0.0 to 10.0 (where **10.0 = fully AI/"vibe-coded"** and **0.0 = fully hand-written**)
 
 The metric weighs:
 - **60%**: Lines of code ratio (human vs AI)
@@ -114,12 +114,13 @@ jobs:
 
 ### Example 3: Assert Vibe Index Range
 
-Prevent merging if Vibe Index drops below a threshold:
+Keep the AI share within a range — e.g. fail if the repo becomes too AI-heavy
+(remember: higher index = more AI):
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    assert-index: '6.0-10.0'  # Fail if index < 6.0 or > 10.0
+    assert-index: '0.0-6.0'  # Fail if index > 6.0 (i.e. >60% AI)
     commits-count: '500'
 ```
 
@@ -175,12 +176,12 @@ https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=349
 
 ## 🎯 Color Coding
 
-Colors automatically adjust based on Vibe Index:
-- **Green (27ae60)**: 8.0-10.0 (Very Human-Centric)
-- **Blue (3498db)**: 6.0-7.9 (Human-Focused)
+Colors automatically adjust based on Vibe Index (higher = more AI):
+- **Red (e74c3c)**: 8.0-10.0 (AI-Heavy)
+- **Orange (e67e22)**: 6.0-7.9 (AI-Assisted)
 - **Yellow (f39c12)**: 4.0-5.9 (Balanced)
-- **Orange (e67e22)**: 2.0-3.9 (AI-Assisted)
-- **Red (e74c3c)**: 0.0-1.9 (AI-Heavy)
+- **Blue (3498db)**: 2.0-3.9 (Human-Focused)
+- **Green (27ae60)**: 0.0-1.9 (Hand-Crafted)
 
 Automatic coloring only applies while `badge-color` is left at its default. Set
 `badge-color` explicitly to always use a fixed color.
@@ -217,18 +218,18 @@ Results in:
 ## 📊 Vibe Index Formula
 
 ```
-Vibe Index = (human_code_ratio × 0.6 + human_commits_ratio × 0.4) × 10
+Vibe Index = (ai_code_ratio × 0.6 + ai_commits_ratio × 0.4) × 10
 ```
 
 Where:
-- `human_code_ratio` = human lines / total lines
-- `human_commits_ratio` = human commits / total commits
+- `ai_code_ratio` = AI lines / total lines
+- `ai_commits_ratio` = AI commits / total commits
 
 **Examples:**
-- 100% human code, 100% human commits → **10.0** (Pure human)
-- 70% human code, 70% human commits → **7.0** (Human-focused)
-- 50% human code, 50% human commits → **5.0** (Balanced)
-- 0% human code, 0% human commits → **0.0** (Pure AI)
+- 0% AI code, 0% AI commits → **0.0** (fully hand-written)
+- 30% AI code, 30% AI commits → **3.0** (human-focused)
+- 50% AI code, 50% AI commits → **5.0** (balanced)
+- 100% AI code, 100% AI commits → **10.0** (fully AI / max vibe)
 
 ## 🛠️ Advanced Examples
 
@@ -251,7 +252,7 @@ automation bots specific to your team — they are merged with the built-in list
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    assert-index: '8.0-10.0'  # Only pure human code allowed
+    assert-index: '0.0-2.0'  # Only near hand-written code allowed (<20% AI)
     commits-count: '1000'
 ```
 

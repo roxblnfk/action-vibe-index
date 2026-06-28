@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Vibe Index scale inverted to match its meaning**: `10.0` now means fully
+  AI/"vibe-coded" and `0.0` means fully hand-written. The formula uses the AI
+  ratios — `(ai_code_ratio × 0.6 + ai_commits_ratio × 0.4) × 10` — and the
+  colors/descriptions follow suit (high index → red/AI-Heavy, low → green/Hand-Crafted).
 - Bot/AI detection is now **identity-based**: signatures match the commit author
   and `Co-Authored-By:` identities (vendor email domains, GitHub App `[bot]`
   accounts, the Copilot agent identity, …), never the free-text message. This
