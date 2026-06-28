@@ -19,7 +19,7 @@ async function run() {
       badgeLogo: core.getInput('badge-logo'),
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
-      updateFile: core.getInput('update-file'),
+      updateFiles: core.getInput('update-files'),
       includeMessage: core.getInput('include-message') || 'Vibe Index',
     };
 
@@ -38,7 +38,7 @@ async function run() {
       badgeLogo,
       assertIndex,
       badgeOutputFile,
-      updateFile,
+      updateFiles,
       includeMessage,
     } = validation.validated;
 
@@ -93,14 +93,14 @@ async function run() {
       core.info(`Badge URL written to: ${badgeOutputFile}`);
     }
 
-    if (updateFile) {
-      const result = updateBadgeInFile(updateFile, badgeMarkdown);
+    for (const file of updateFiles) {
+      const result = updateBadgeInFile(file, badgeMarkdown);
       if (!result.ok) {
-        core.warning(`Could not update ${updateFile}: ${result.reason}`);
+        core.warning(`Could not update ${file}: ${result.reason}`);
       } else if (result.changed) {
-        core.info(`Updated badge in: ${updateFile}`);
+        core.info(`Updated badge in: ${file}`);
       } else {
-        core.info(`Badge in ${updateFile} already up to date.`);
+        core.info(`Badge in ${file} already up to date.`);
       }
     }
 

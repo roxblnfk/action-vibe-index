@@ -43,10 +43,10 @@ inputs:
     required: false
     default: ''
 
-  update-file:
-    description: 'Markdown file whose badge to update in place between the "<!-- vibe-index:start -->" and "<!-- vibe-index:end -->" markers (e.g., README.md)'
+  update-files:
+    description: 'Comma- or newline-separated list of markdown files whose badge to update in place between the "<!-- vibe-index:start -->" and "<!-- vibe-index:end -->" markers. Set to an empty string to disable.'
     required: false
-    default: ''
+    default: 'README.md'
 
   include-message:
     description: 'Custom message/label for badge (default: "Vibe Index")'

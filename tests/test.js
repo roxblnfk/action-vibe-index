@@ -11,6 +11,7 @@ const {
   validateBadgeStyle,
   validateBadgeColor,
   validateAssertIndex,
+  validateUpdateFiles,
   validateAllInputs,
 } = require('../src/validation');
 
@@ -228,6 +229,14 @@ test('assert-index parsing', () => {
   assert.throws(() => validateAssertIndex('0-11'));
 });
 
+test('update-files parsing (comma and newline separated)', () => {
+  assert.deepStrictEqual(validateUpdateFiles('README.md'), ['README.md']);
+  assert.deepStrictEqual(validateUpdateFiles('README.md, docs/index.md'), ['README.md', 'docs/index.md']);
+  assert.deepStrictEqual(validateUpdateFiles('a.md\n b.md \n'), ['a.md', 'b.md']);
+  assert.deepStrictEqual(validateUpdateFiles(''), []);
+  assert.deepStrictEqual(validateUpdateFiles(' , '), []);
+});
+
 test('validateAllInputs passes through badge-output-file (regression)', () => {
   const result = validateAllInputs({
     commitsCount: '10',
@@ -238,11 +247,13 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
     badgeLogo: 'github',
     assertIndex: '',
     badgeOutputFile: 'badge-url.txt',
+    updateFiles: 'README.md, CONTRIBUTING.md',
     includeMessage: 'Vibe Index',
   });
   assert.strictEqual(result.success, true);
   assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
   assert.strictEqual(result.validated.badgeLogo, 'github');
+  assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

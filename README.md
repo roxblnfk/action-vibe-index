@@ -50,7 +50,9 @@ whatever is between them):
 <!-- vibe-index:end -->
 ```
 
-Then let the action keep them up to date and commit the change:
+Then let the action keep them up to date and commit the change. The action
+updates `README.md` by default; pass `update-files` to target a different set
+of files:
 
 ```yaml
 name: Update Vibe Index Badge
@@ -73,8 +75,9 @@ jobs:
           fetch-depth: 0  # required: the action needs full commit history
 
       - uses: roxblnfk/vibe-index@v1
-        with:
-          update-file: 'README.md'  # rewrites the badge between the markers
+        # update-files defaults to README.md; the badge between the markers is
+        # rewritten in place. Use e.g. update-files: 'README.md, docs/index.md'
+        # to target several files.
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -122,7 +125,7 @@ Prevent merging if Vibe Index drops below a threshold:
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
-| `update-file` | No | `` | Markdown file to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers |
+| `update-files` | No | `README.md` | Comma/newline-separated list of markdown files to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers. Set to empty to disable |
 | `include-message` | No | `Vibe Index` | Custom label for badge |
 
 ## 📤 Outputs

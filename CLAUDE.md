@@ -118,7 +118,7 @@ Orchestrates the analysis and outputs results.
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
-| `update-file` | String | '' | Markdown file to update in place between markers |
+| `update-files` | String | README.md | Comma/newline list of markdown files to update in place between markers |
 | `include-message` | String | Vibe Index | Badge label text |
 
 ### Output Parameters
@@ -140,14 +140,17 @@ replacement and a global pattern clobbers every badge.
 <!-- vibe-index:end -->
 ```
 
+`update-files` defaults to `README.md`; pass a comma/newline list to target
+several files, or an empty string to disable.
+
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    update-file: 'README.md'
+    update-files: 'README.md, docs/index.md'
 - uses: stefanzweifel/git-auto-commit-action@v5
   with:
     commit_message: 'chore: update Vibe Index badge'
-    file_pattern: 'README.md'
+    file_pattern: 'README.md docs/index.md'
 ```
 
 ### 2. **PR Comment**
