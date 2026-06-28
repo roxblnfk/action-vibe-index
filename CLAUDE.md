@@ -98,8 +98,9 @@ escaping).
 - Custom styles (flat, flat-square, plastic, for-the-badge, social)
 - Custom colors (hex or named)
 - Optional logo: built-in `sparkles` (AI/magic data-URI icon) or a simple-icons slug
-- Markdown embedding
-- HTML embedding
+- Markdown embedding (`generateBadgeMarkdown` → `![alt](url)`, link-wrapped)
+- HTML embedding (`generateBadgeHtml` → `<img>`, wrapped in `<a>` when a link is
+  set); used between the HTML comment markers, where HTML renders reliably
 
 #### 4. **index.js** - GitHub Action Entry Point
 Orchestrates the analysis and outputs results.
@@ -147,21 +148,24 @@ it is robust to `&`/`/` in the URL and never touches example badges elsewhere
 in the file — unlike a `sed` one-liner, where `&` is special in the
 replacement and a global pattern clobbers every badge.
 
-`badge-discovery` selects how the badge is located: `markers` (between the
-comment markers), `markdown` (an existing `![Vibe Index](...)` image, matched by
-alt text and replaced in place — including a link-wrapped `[![…](…)](…)`), or
-`auto` (markers first, then markdown). Markdown discovery replaces only the
-first matching image.
+`badge-discovery` selects how the badge is located, and the form written
+depends on the path: `markers` (between the comment markers) writes **HTML**
+(`<img>`, wrapped in `<a>` when `badge-link` is set), because the markers are
+HTML comments and HTML renders reliably there; `markdown` (an existing
+`![Vibe Index](...)` image, matched by alt text and replaced in place —
+including a link-wrapped `[![…](…)](…)`) writes **markdown**; `auto` tries
+markers first, then markdown. Markdown discovery replaces only the first
+matching image. The updater receives both forms (`{ markdown, html }`) so each
+path emits the right one.
 
 Layout follows the markers: when the start marker begins its own line the badge
-is written on its own line (a line starting with `<!--` is a raw HTML block on
-GitHub, where an inline image would not render); when content precedes the
-marker the badge stays inline (badge rows). The badge is wrapped in `badge-link`
+is written on its own line for a tidy block; when content precedes the marker
+the badge stays inline (badge rows). The badge is wrapped in `badge-link`
 (default: the repo URL) so readers can click through to the explanation.
 
 ```markdown
 <!-- vibe-index:start -->
-![Vibe Index](...)
+<a href="..."><img src="..." alt="Vibe Index" /></a>
 <!-- vibe-index:end -->
 ```
 

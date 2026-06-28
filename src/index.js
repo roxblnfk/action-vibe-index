@@ -2,7 +2,7 @@ const fs = require('fs');
 const core = require('./core');
 const { analyzeRepository, isShallowRepository } = require('./analyzer');
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('./calculator');
-const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
+const { generateBadgeUrl, generateBadgeMarkdown, generateBadgeHtml } = require('./badge');
 const { updateBadgeInFile } = require('./updater');
 const { commitChanges } = require('./committer');
 const { validateAllInputs } = require('./validation');
@@ -99,6 +99,7 @@ async function run() {
     });
 
     const badgeMarkdown = generateBadgeMarkdown(badgeUrl, includeMessage, badgeLink);
+    const badgeHtml = generateBadgeHtml(badgeUrl, includeMessage, badgeLink);
 
     core.setOutput('vibe-index', score);
     core.setOutput('human-percentage', metrics.humanPercentage.toFixed(1));
@@ -107,6 +108,7 @@ async function run() {
     core.setOutput('ai-commits-percentage', metrics.aiCommitsPercentage.toFixed(1));
     core.setOutput('badge-url', badgeUrl);
     core.setOutput('badge-markdown', badgeMarkdown);
+    core.setOutput('badge-html', badgeHtml);
 
     core.info('\nVibe Index Results:');
     core.info(`  Vibe Index: ${score}/10.0 (${getDescriptionForIndex(vibeIndex)})`);
@@ -124,7 +126,7 @@ async function run() {
 
     const changedFiles = [];
     for (const file of updateFiles) {
-      const result = updateBadgeInFile(file, badgeMarkdown, badgeDiscovery);
+      const result = updateBadgeInFile(file, { markdown: badgeMarkdown, html: badgeHtml }, badgeDiscovery);
       if (!result.ok) {
         core.warning(`Could not update ${file}: ${result.reason}`);
       } else if (result.changed) {

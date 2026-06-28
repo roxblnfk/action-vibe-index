@@ -74,14 +74,19 @@ function generateBadgeMarkdown(badgeUrl, altText = 'Vibe Index', linkUrl = '') {
 }
 
 /**
- * Generate an HTML <img> tag for the badge.
+ * Generate HTML badge markup: an `<img>`, wrapped in an `<a>` when a link is
+ * given. Used between the HTML comment markers, where HTML is the natural fit
+ * and renders regardless of inline/block context (unlike a markdown image right
+ * after a `<!--` line, which GitHub treats as a raw HTML block).
  *
  * @param {string} badgeUrl - Badge URL
  * @param {string} [altText] - Alternative text
+ * @param {string} [linkUrl] - Optional link target
  * @returns {string} HTML syntax
  */
-function generateBadgeHtml(badgeUrl, altText = 'Vibe Index') {
-  return `<img src="${badgeUrl}" alt="${altText}" />`;
+function generateBadgeHtml(badgeUrl, altText = 'Vibe Index', linkUrl = '') {
+  const img = `<img src="${badgeUrl}" alt="${altText}" />`;
+  return linkUrl ? `<a href="${linkUrl}">${img}</a>` : img;
 }
 
 module.exports = {

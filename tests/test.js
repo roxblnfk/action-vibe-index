@@ -5,7 +5,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
-const { generateBadgeUrl, generateBadgeMarkdown, resolveLogo } = require('../src/badge');
+const { generateBadgeUrl, generateBadgeMarkdown, generateBadgeHtml, resolveLogo } = require('../src/badge');
 const { analyzeRepository, classifyCommit, buildMatchers, isShallowRepository } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const { commitChanges } = require('../src/committer');
@@ -182,6 +182,11 @@ test('markdown image, with and without link', () => {
   assert.strictEqual(generateBadgeMarkdown('U', 'Alt', 'L'), '[![Alt](U)](L)');
 });
 
+test('html image, with and without link', () => {
+  assert.strictEqual(generateBadgeHtml('U', 'Alt'), '<img src="U" alt="Alt" />');
+  assert.strictEqual(generateBadgeHtml('U', 'Alt', 'L'), '<a href="L"><img src="U" alt="Alt" /></a>');
+});
+
 console.log('analyzer.classifyCommit (identity-based)');
 
 test('plain human commit', () => {
@@ -257,9 +262,15 @@ test('extra-bot-patterns extend the built-in list', () => {
 
 console.log('updater.replaceBadge');
 
-const NEW_BADGE = '![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=6.9%2F10.0&color=3498db&style=flat-square)';
+// Badge in both forms, as the action now passes it: markers get HTML, an
+// existing markdown image is replaced with markdown.
+const NEW_URL = 'https://img.shields.io/static/v1?label=Vibe%20Index&message=6.9%2F10.0&color=3498db&style=flat-square';
+function badgeForms(url, alt = 'Vibe Index', link = '') {
+  return { markdown: generateBadgeMarkdown(url, alt, link), html: generateBadgeHtml(url, alt, link) };
+}
+const NEW_BADGE = badgeForms(NEW_URL);
 
-test('replaces only content between markers', () => {
+test('replaces only content between markers (with HTML)', () => {
   const doc = [
     '# Title',
     START_MARKER,
@@ -272,7 +283,8 @@ test('replaces only content between markers', () => {
 
   const { content, updated } = replaceBadge(doc, NEW_BADGE);
   assert.strictEqual(updated, true);
-  assert.ok(content.includes(NEW_BADGE), 'new badge inserted');
+  assert.ok(content.includes(NEW_BADGE.html), 'new badge inserted as HTML');
+  assert.ok(content.includes('<img src='), 'HTML img markup, not markdown');
   assert.ok(!content.includes('message=1.0'), 'old marked badge replaced');
   assert.ok(content.includes('message=2.0'), 'example badge outside markers untouched');
   // Ampersands in the URL survive verbatim (the sed approach mangled them).
@@ -301,33 +313,32 @@ test('inline markers in a row (content precedes) stay on one line', () => {
   assert.ok(!content.includes('\n'), 'no newline introduced into the row');
   assert.strictEqual(
     content,
-    `![build](b.svg) ${START_MARKER}${NEW_BADGE}${END_MARKER} ![license](l.svg)`
+    `![build](b.svg) ${START_MARKER}${NEW_BADGE.html}${END_MARKER} ![license](l.svg)`
   );
 });
 
-test('marker pair alone on a line becomes a block so it renders on GitHub', () => {
-  // A line starting with <!-- is an HTML block on GitHub; inline markdown there
-  // would not render, so the badge must go on its own line.
+test('marker pair alone on a line becomes a block', () => {
   const doc = `# t\n\n${START_MARKER}${END_MARKER}\n\ntext`;
   const { content, updated } = replaceBadge(doc, NEW_BADGE);
   assert.strictEqual(updated, true);
-  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge placed on its own line');
+  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE.html}\n${END_MARKER}`), 'badge placed on its own line');
 });
 
 test('block markers keep the badge on its own line', () => {
   const doc = `# t\n${START_MARKER}\n![old](old.svg)\n${END_MARKER}\ntext`;
   const { content } = replaceBadge(doc, NEW_BADGE);
-  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'badge stays on its own line');
+  assert.ok(content.includes(`${START_MARKER}\n${NEW_BADGE.html}\n${END_MARKER}`), 'badge stays on its own line');
 });
 
 console.log('updater badge-discovery');
 
-test('markdown discovery replaces a bare ![Vibe Index](...) image', () => {
+test('markdown discovery replaces a bare ![Vibe Index](...) image with markdown', () => {
   const doc = '# t\n\n![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=1.0&color=red)\n\nx';
   const { content, updated, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
   assert.strictEqual(found, true);
   assert.strictEqual(updated, true);
-  assert.ok(content.includes(NEW_BADGE));
+  assert.ok(content.includes(NEW_BADGE.markdown));
+  assert.ok(!content.includes('<img src='), 'markdown discovery keeps markdown, not HTML');
   assert.ok(!content.includes('message=1.0'));
 });
 
@@ -336,7 +347,7 @@ test('markdown discovery detects an empty ![Vibe Index]() starter placeholder', 
   const { content, updated, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
   assert.strictEqual(found, true);
   assert.strictEqual(updated, true);
-  assert.ok(content.includes(NEW_BADGE), 'placeholder filled with the real badge');
+  assert.ok(content.includes(NEW_BADGE.markdown), 'placeholder filled with the real badge');
   assert.ok(!content.includes('![Vibe Index]()'), 'empty placeholder is gone');
 });
 
@@ -344,7 +355,7 @@ test('markdown discovery replaces a link-wrapped badge whole', () => {
   const doc = '[![Vibe Index](https://x/old)](https://old-link)';
   const { content, found } = replaceBadge(doc, NEW_BADGE, 'markdown');
   assert.strictEqual(found, true);
-  assert.strictEqual(content, NEW_BADGE);
+  assert.strictEqual(content, NEW_BADGE.markdown);
 });
 
 test('markdown discovery ignores images with a different alt', () => {
@@ -361,45 +372,49 @@ test('markers mode does not touch a markdown-only badge', () => {
 });
 
 test('link is added around a bare badge when badge-link is set', () => {
-  const linked = generateBadgeMarkdown('https://x', 'Vibe Index', 'https://repo');
-  // markdown discovery on a bare placeholder
+  const linked = badgeForms('https://x', 'Vibe Index', 'https://repo');
+  // markdown discovery on a bare placeholder -> link-wrapped markdown
   assert.strictEqual(
     replaceBadge('![Vibe Index]()', linked, 'markdown').content,
     '[![Vibe Index](https://x)](https://repo)'
   );
-  // markers discovery wraps too
+  // markers discovery wraps too, as HTML <a><img>
   assert.ok(
     replaceBadge('<!-- vibe-index:start -->![Vibe Index]()<!-- vibe-index:end -->', linked, 'markers')
-      .content.includes('[![Vibe Index](https://x)](https://repo)')
+      .content.includes('<a href="https://repo"><img src="https://x" alt="Vibe Index" /></a>')
   );
 });
 
 test('link is removed around a linked badge when badge-link is empty', () => {
-  const bare = generateBadgeMarkdown('https://x', 'Vibe Index', '');
-  // markdown discovery on a link-wrapped badge -> bare
+  const bare = badgeForms('https://x', 'Vibe Index', '');
+  // markdown discovery on a link-wrapped badge -> bare markdown
   assert.strictEqual(
     replaceBadge('[![Vibe Index](https://o/old)](https://o/lnk)', bare, 'markdown').content,
     '![Vibe Index](https://x)'
   );
-  // markers discovery unwraps too
-  assert.ok(
-    !replaceBadge('<!-- vibe-index:start -->[![Vibe Index](https://o/old)](https://o/lnk)<!-- vibe-index:end -->', bare, 'markers')
-      .content.includes('](https://o/lnk)')
-  );
+  // markers discovery unwraps too: bare <img>, no link
+  const unwrapped = replaceBadge(
+    '<!-- vibe-index:start -->[![Vibe Index](https://o/old)](https://o/lnk)<!-- vibe-index:end -->',
+    bare,
+    'markers'
+  ).content;
+  assert.ok(!unwrapped.includes('https://o/lnk'), 'old link gone');
+  assert.ok(!unwrapped.includes('<a '), 'no link wrapper');
+  assert.ok(unwrapped.includes('<img src="https://x" alt="Vibe Index" />'), 'bare img');
 });
 
 test('auto prefers markers, falls back to markdown', () => {
-  // markers present -> use them
+  // markers present -> use them (HTML)
   const withMarkers = `${START_MARKER}${END_MARKER}\n\n![Vibe Index](old.svg)`;
   const a = replaceBadge(withMarkers, NEW_BADGE, 'auto');
-  assert.ok(a.content.includes(`${START_MARKER}\n${NEW_BADGE}\n${END_MARKER}`), 'markers win');
+  assert.ok(a.content.includes(`${START_MARKER}\n${NEW_BADGE.html}\n${END_MARKER}`), 'markers win');
   assert.ok(a.content.includes('![Vibe Index](old.svg)'), 'the separate markdown badge is left alone');
 
-  // no markers -> markdown fallback
+  // no markers -> markdown fallback (markdown)
   const mdOnly = '# t\n\n![Vibe Index](old.svg)\n';
   const b = replaceBadge(mdOnly, NEW_BADGE, 'auto');
   assert.strictEqual(b.found, true);
-  assert.ok(b.content.includes(NEW_BADGE));
+  assert.ok(b.content.includes(NEW_BADGE.markdown));
 });
 
 console.log('committer (temp git repo)');

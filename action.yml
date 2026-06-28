@@ -110,6 +110,9 @@ outputs:
   badge-markdown:
     description: 'Markdown syntax for embedding badge'
 
+  badge-html:
+    description: 'HTML syntax for embedding badge (img, wrapped in a link when badge-link is set)'
+
 runs:
   using: 'node24'
   main: 'src/index.js'

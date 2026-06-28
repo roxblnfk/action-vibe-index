@@ -50,7 +50,9 @@ Wrap the spot in markers instead — an explicit, comment-based anchor:
 <!-- vibe-index:start --><!-- vibe-index:end -->
 ```
 
-With `badge-discovery: auto` (the default) both styles are found; set it to
+Between the markers the action writes HTML (so it renders in any context); an
+existing `![Vibe Index](...)` image is updated as markdown. With
+`badge-discovery: auto` (the default) both styles are found; set it to
 `markdown` or `markers` to force one.
 </details>
 
@@ -149,6 +151,7 @@ Every option with its default — keep only what you need:
 | `ai-commits-percentage` / `human-commits-percentage` | Share of commits by AI / by humans |
 | `badge-url` | Generated shields.io badge URL |
 | `badge-markdown` | Ready-to-paste markdown for the badge |
+| `badge-html` | Ready-to-paste HTML for the badge (`<img>`, wrapped in `<a>` when `badge-link` is set) |
 
 ### Recipe: comment the score on every pull request
 
