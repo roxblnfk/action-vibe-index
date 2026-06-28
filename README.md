@@ -1,7 +1,7 @@
 # 🎵 Vibe Index GitHub Action
 
 <!-- vibe-index:start -->
-[![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=6.8%2F10.0&color=5d6de4&style=flat-square)](https://github.com/roxblnfk/action-vibe-index)
+[![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=6.9%2F10.0&color=5e6be4&style=flat-square&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI%2BPHBhdGggZD0iTTkgNCBROSAxMyAxOCAxMyBROSAxMyA5IDIyIFE5IDEzIDAgMTMgUTkgMTMgOSA0IFoiLz48cGF0aCBkPSJNMTkgMSBRMTkgNiAyNCA2IFExOSA2IDE5IDExIFExOSA2IDE0IDYgUTE5IDYgMTkgMSBaIi8%2BPHBhdGggZD0iTTIwIDE0IFEyMCAxOCAyNCAxOCBRMjAgMTggMjAgMjIgUTIwIDE4IDE2IDE4IFEyMCAxOCAyMCAxNCBaIi8%2BPC9zdmc%2B)](https://github.com/roxblnfk/action-vibe-index)
 <!-- vibe-index:end -->
 
 <p align="center">
