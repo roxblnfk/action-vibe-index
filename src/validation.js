@@ -119,6 +119,13 @@ function validateBadgeOutputFile(file) {
   return file.trim();
 }
 
+function validateUpdateFile(file) {
+  if (!file || typeof file !== 'string') {
+    return '';
+  }
+  return file.trim();
+}
+
 function validateIncludeMessage(message) {
   if (!message || typeof message !== 'string') {
     return 'Vibe Index';
@@ -147,6 +154,7 @@ function validateAllInputs(inputs) {
     validated.includeMessage = validateIncludeMessage(inputs.includeMessage);
     validated.badgeLogo = validateBadgeLogo(inputs.badgeLogo);
     validated.badgeOutputFile = validateBadgeOutputFile(inputs.badgeOutputFile);
+    validated.updateFile = validateUpdateFile(inputs.updateFile);
 
     return {
       success: true,
@@ -170,5 +178,6 @@ module.exports = {
   validateIncludeMessage,
   validateBadgeLogo,
   validateBadgeOutputFile,
+  validateUpdateFile,
   validateAllInputs,
 };

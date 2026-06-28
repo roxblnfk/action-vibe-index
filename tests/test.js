@@ -3,6 +3,7 @@ const assert = require('assert');
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
 const { classifyCommit, buildKeywordMatchers } = require('../src/analyzer');
+const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const {
   validateCommitsCount,
   validateCoAuthorMultiplier,
@@ -148,6 +149,45 @@ test('human co-author is not treated as AI', () => {
   const message = 'feat: add feature\n\nCo-Authored-By: Jane Doe <jane@example.com>';
   const r = classifyCommit({ message, added: 5, removed: 0 }, matchers);
   assert.strictEqual(r.classification, 'human');
+});
+
+console.log('updater.replaceBadge');
+
+const NEW_BADGE = '![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=6.9%2F10.0&color=3498db&style=flat-square)';
+
+test('replaces only content between markers', () => {
+  const doc = [
+    '# Title',
+    START_MARKER,
+    '![old](https://img.shields.io/static/v1?label=X&message=1.0&color=red)',
+    END_MARKER,
+    '',
+    '## Examples',
+    '![example](https://img.shields.io/static/v1?label=Y&message=2.0&color=blue)',
+  ].join('\n');
+
+  const { content, updated } = replaceBadge(doc, NEW_BADGE);
+  assert.strictEqual(updated, true);
+  assert.ok(content.includes(NEW_BADGE), 'new badge inserted');
+  assert.ok(!content.includes('message=1.0'), 'old marked badge replaced');
+  assert.ok(content.includes('message=2.0'), 'example badge outside markers untouched');
+  // Ampersands in the URL survive verbatim (the sed approach mangled them).
+  assert.ok(content.includes('&color=3498db'), 'ampersands preserved');
+});
+
+test('idempotent on second run', () => {
+  const doc = `${START_MARKER}\nold\n${END_MARKER}`;
+  const once = replaceBadge(doc, NEW_BADGE).content;
+  const twice = replaceBadge(once, NEW_BADGE);
+  assert.strictEqual(twice.updated, false);
+  assert.strictEqual(twice.content, once);
+});
+
+test('no markers -> no change', () => {
+  const doc = '# Just a readme without markers';
+  const { content, updated } = replaceBadge(doc, NEW_BADGE);
+  assert.strictEqual(updated, false);
+  assert.strictEqual(content, doc);
 });
 
 console.log('validation');

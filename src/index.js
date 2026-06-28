@@ -3,6 +3,7 @@ const core = require('./core');
 const { analyzeRepository } = require('./analyzer');
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('./calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('./badge');
+const { updateBadgeInFile } = require('./updater');
 const { validateAllInputs } = require('./validation');
 
 const DEFAULT_BADGE_COLOR = '3498db';
@@ -18,6 +19,7 @@ async function run() {
       badgeLogo: core.getInput('badge-logo'),
       assertIndex: core.getInput('assert-index'),
       badgeOutputFile: core.getInput('badge-output-file'),
+      updateFile: core.getInput('update-file'),
       includeMessage: core.getInput('include-message') || 'Vibe Index',
     };
 
@@ -36,6 +38,7 @@ async function run() {
       badgeLogo,
       assertIndex,
       badgeOutputFile,
+      updateFile,
       includeMessage,
     } = validation.validated;
 
@@ -88,6 +91,17 @@ async function run() {
     if (badgeOutputFile) {
       fs.writeFileSync(badgeOutputFile, badgeUrl);
       core.info(`Badge URL written to: ${badgeOutputFile}`);
+    }
+
+    if (updateFile) {
+      const result = updateBadgeInFile(updateFile, badgeMarkdown);
+      if (!result.ok) {
+        core.warning(`Could not update ${updateFile}: ${result.reason}`);
+      } else if (result.changed) {
+        core.info(`Updated badge in: ${updateFile}`);
+      } else {
+        core.info(`Badge in ${updateFile} already up to date.`);
+      }
     }
 
     if (assertIndex) {

@@ -1,6 +1,8 @@
 # 🎵 Vibe Index GitHub Action
 
+<!-- vibe-index:start -->
 ![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=8.5%2F10.0&color=27ae60&style=flat-square)
+<!-- vibe-index:end -->
 
 Measure the ratio of human-written code vs AI-generated code in your repository and generate a dynamic badge for your README.
 
@@ -39,6 +41,17 @@ Add this action to your workflow:
 
 ### Example 1: Post Badge in README
 
+First, add the markers anywhere in your `README.md` (the action replaces
+whatever is between them):
+
+```markdown
+<!-- vibe-index:start -->
+![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=0.0%2F10.0&color=lightgrey&style=flat-square)
+<!-- vibe-index:end -->
+```
+
+Then let the action keep them up to date and commit the change:
+
 ```yaml
 name: Update Vibe Index Badge
 
@@ -47,6 +60,9 @@ on:
     branches: [main]
   schedule:
     - cron: '0 0 * * 0'  # Weekly
+
+permissions:
+  contents: write
 
 jobs:
   vibe:
@@ -57,17 +73,13 @@ jobs:
           fetch-depth: 0  # required: the action needs full commit history
 
       - uses: roxblnfk/vibe-index@v1
-        id: vibe
-
-      - name: Update README
-        run: |
-          badge_url="${{ steps.vibe.outputs.badge-url }}"
-          # Replace any existing shields.io Vibe Index badge URL in the README
-          sed -i "s|https://img.shields.io/static/v1?label=Vibe%20Index[^)\" ]*|$badge_url|g" README.md
+        with:
+          update-file: 'README.md'  # rewrites the badge between the markers
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'Update Vibe Index badge'
+          commit_message: 'chore: update Vibe Index badge'
+          file_pattern: 'README.md'
 ```
 
 ### Example 2: Comment on Pull Requests
@@ -110,6 +122,7 @@ Prevent merging if Vibe Index drops below a threshold:
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
 | `assert-index` | No | `` | Assertion range, e.g., `"6.0-10.0"`. Fails if outside range |
 | `badge-output-file` | No | `` | File to write badge URL to (e.g., `badge-url.txt`) |
+| `update-file` | No | `` | Markdown file to update in place between the `<!-- vibe-index:start -->` / `<!-- vibe-index:end -->` markers |
 | `include-message` | No | `Vibe Index` | Custom label for badge |
 
 ## 📤 Outputs

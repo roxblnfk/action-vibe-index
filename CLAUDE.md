@@ -18,6 +18,7 @@ src/
   analyzer.js                 # Git repository analysis
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
+  updater.js                  # In-place README badge update (marker-based)
   validation.js               # Input parsing and validation
 
 tests/
@@ -117,6 +118,7 @@ Orchestrates the analysis and outputs results.
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
 | `assert-index` | String | '' | Optional range assertion (e.g., "6.0-10.0") |
 | `badge-output-file` | String | '' | File to save badge URL |
+| `update-file` | String | '' | Markdown file to update in place between markers |
 | `include-message` | String | Vibe Index | Badge label text |
 
 ### Output Parameters
@@ -126,12 +128,26 @@ All numeric outputs are formatted to 1 decimal place.
 ## Usage Scenarios
 
 ### 1. **Update README Badge**
-Automatically update a badge in README.md after each push to main:
+Place markers in README.md and let the action rewrite the badge in place
+(`updater.js`). This uses literal string replacement between the markers, so
+it is robust to `&`/`/` in the URL and never touches example badges elsewhere
+in the file — unlike a `sed` one-liner, where `&` is special in the
+replacement and a global pattern clobbers every badge.
+
+```markdown
+<!-- vibe-index:start -->
+![Vibe Index](...)
+<!-- vibe-index:end -->
+```
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
-  id: vibe
-- run: sed -i "s|https://img.shields.io/static/v1?label=Vibe%20Index[^)\" ]*|${{ steps.vibe.outputs.badge-url }}|g" README.md
+  with:
+    update-file: 'README.md'
+- uses: stefanzweifel/git-auto-commit-action@v5
+  with:
+    commit_message: 'chore: update Vibe Index badge'
+    file_pattern: 'README.md'
 ```
 
 ### 2. **PR Comment**
