@@ -1,0 +1,44 @@
+name: Vibe Index
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vibe-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history is required for analysis
+
+      - name: Calculate Vibe Index and update README badge
+        id: vibe
+        uses: ./
+        with:
+          # update-files defaults to README.md: the badge between the markers is
+          # rewritten in place.
+          # assert-index alerts (fails the run) when the score drops below 8.0.
+          assert-index: '8.0-10.0'
+
+      # Persist the refreshed badge even when the assertion fails, so README
+      # always reflects the current score. Only commits on push to main; the
+      # GITHUB_TOKEN commit does not retrigger this workflow.
+      - name: Commit updated badge
+        if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update Vibe Index badge'
+          file_pattern: 'README.md'
+
+      - name: Summary
+        if: ${{ always() }}
+        run: |
+          echo "Vibe Index: ${{ steps.vibe.outputs.vibe-index }}/10.0"
+          echo "Human code: ${{ steps.vibe.outputs.human-percentage }}%"
+          echo "Human commits: ${{ steps.vibe.outputs.human-commits-percentage }}%"

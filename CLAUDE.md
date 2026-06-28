@@ -9,8 +9,7 @@
 ```
 .github/
   workflows/
-    vibe-index-badge.yml      # Main workflow example
-    vibe-index-assert.yml     # Assertion workflow example
+    vibe-index.yml            # Updates the README badge and asserts the score
 
 src/
   index.js                    # Entry point (runs in GitHub Actions)
