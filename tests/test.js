@@ -5,7 +5,7 @@ const { execFileSync } = require('child_process');
 
 const { calculateVibeIndex, getColorForIndex, getDescriptionForIndex } = require('../src/calculator');
 const { generateBadgeUrl, generateBadgeMarkdown } = require('../src/badge');
-const { classifyCommit, buildMatchers } = require('../src/analyzer');
+const { analyzeRepository, classifyCommit, buildMatchers } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const {
   validateCommitsCount,
@@ -83,6 +83,25 @@ test('weighting 60/40 (ai code 20%, ai commits 70%)', () => {
   });
   // 0.2 * 0.6 + 0.7 * 0.4 = 0.4 -> 4.0
   approx(vibeIndex, 4, 'vibeIndex');
+});
+
+test('vibeIndex stays within 0..10 across the full ai-share grid', () => {
+  for (let code = 0; code <= 100; code += 5) {
+    for (let commits = 0; commits <= 100; commits += 5) {
+      const { vibeIndex } = calculateVibeIndex({
+        humanPercentage: 100 - code,
+        aiPercentage: code,
+        humanCommitsPercentage: 100 - commits,
+        aiCommitsPercentage: commits,
+      });
+      assert.ok(vibeIndex >= 0 && vibeIndex <= 10, `code=${code} commits=${commits} -> ${vibeIndex}`);
+    }
+  }
+});
+
+test('vibeIndex clamps even on out-of-range inputs', () => {
+  assert.strictEqual(calculateVibeIndex({ aiPercentage: 150, aiCommitsPercentage: 150 }).vibeIndex, 10);
+  assert.strictEqual(calculateVibeIndex({ aiPercentage: -50, aiCommitsPercentage: -50 }).vibeIndex, 0);
 });
 
 test('color is interpolated along the green->purple gradient', () => {
@@ -364,7 +383,48 @@ test('badge is updated even when the assertion fails', () => {
   }
 });
 
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed > 0) {
-  process.exit(1);
+async function testAsync(name, fn) {
+  try {
+    await fn();
+    passed++;
+    console.log(`  ok   ${name}`);
+  } catch (error) {
+    failed++;
+    console.error(`  FAIL ${name}`);
+    console.error(`       ${error.message}`);
+  }
 }
+
+(async () => {
+  console.log('property: index within bounds for any co-author-multiplier (real repo)');
+
+  await testAsync('vibeIndex in [0,10] and shares in [0,100] across multipliers 0..1', async () => {
+    for (const multiplier of [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]) {
+      const analysis = await analyzeRepository({
+        commitsCount: 80,
+        coAuthorMultiplier: multiplier,
+        extraPatterns: [],
+      });
+      const { vibeIndex } = calculateVibeIndex(analysis);
+
+      assert.ok(
+        vibeIndex >= 0 && vibeIndex <= 10,
+        `multiplier ${multiplier}: vibeIndex ${vibeIndex} out of [0,10]`
+      );
+      for (const key of ['humanPercentage', 'aiPercentage', 'humanCommitsPercentage', 'aiCommitsPercentage']) {
+        assert.ok(
+          analysis[key] >= 0 && analysis[key] <= 100,
+          `multiplier ${multiplier}: ${key}=${analysis[key]} out of [0,100]`
+        );
+      }
+      // human + AI shares must add up to 100% (no double counting / leakage).
+      assert.ok(Math.abs(analysis.humanPercentage + analysis.aiPercentage - 100) < 1e-6 || analysis.totalLinesChanged === 0);
+      assert.ok(Math.abs(analysis.humanCommitsPercentage + analysis.aiCommitsPercentage - 100) < 1e-6 || analysis.totalCommits === 0);
+    }
+  });
+
+  console.log(`\n${passed} passed, ${failed} failed`);
+  if (failed > 0) {
+    process.exit(1);
+  }
+})();
