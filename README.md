@@ -4,7 +4,15 @@
 ![Vibe Index](https://img.shields.io/static/v1?label=Vibe+Index&message=4.1%2F10.0&color=f39c12&style=flat-square)
 <!-- vibe-index:end -->
 
-Measure the ratio of human-written code vs AI-generated code in your repository and generate a dynamic badge for your README.
+<p align="center">
+  <img src="docs/vibe-scale.svg" alt="Vibe Index scale: 0 means hand-crafted by a human, 10 means fully written by AI" width="680">
+</p>
+
+**The higher the score, the more of your code was written by AI.**
+`0.0` = every line hand-written by a human · `10.0` = everything authored by AI agents or bots.
+
+Vibe Index analyzes your git history to measure the ratio of AI-written vs
+hand-written code, and turns it into a dynamic badge for your README.
 
 ## 📊 What is Vibe Index?
 
