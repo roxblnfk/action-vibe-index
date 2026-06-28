@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 170" width="760" height="170" role="img" aria-label="Proposed Vibe Index palette: gradient from green (hand-crafted) to festive purple (AI)">
+  <defs>
+    <linearGradient id="vibe" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"    stop-color="#27ae60"/>
+      <stop offset="0.25" stop-color="#1abc9c"/>
+      <stop offset="0.5"  stop-color="#3498db"/>
+      <stop offset="0.75" stop-color="#6c5ce7"/>
+      <stop offset="1"    stop-color="#8a2be2"/>
+    </linearGradient>
+    <clipPath id="round">
+      <rect x="40" y="70" width="680" height="28" rx="6" ry="6"/>
+    </clipPath>
+  </defs>
+
+  <!-- card -->
+  <rect x="2" y="2" width="756" height="166" rx="12" ry="12" fill="#ffffff" stroke="#e1e4e8" stroke-width="1.5"/>
+
+  <!-- title -->
+  <text x="380" y="28" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#24292f">Vibe Index — green → festive purple</text>
+
+  <!-- end labels -->
+  <text x="40" y="62" text-anchor="start" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#24292f">👤 hand-crafted</text>
+  <text x="720" y="62" text-anchor="end" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#24292f">vibe-coded 🤖✨</text>
+
+  <!-- smooth gradient bar -->
+  <g clip-path="url(#round)">
+    <rect x="40" y="70" width="680" height="28" fill="url(#vibe)"/>
+  </g>
+  <rect x="40" y="70" width="680" height="28" rx="6" ry="6" fill="none" stroke="#00000022" stroke-width="1"/>
+
+  <!-- tick numbers -->
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#57606a" text-anchor="middle">
+    <text x="40"  y="115">0</text>
+    <text x="176" y="115">2</text>
+    <text x="312" y="115">4</text>
+    <text x="448" y="115">6</text>
+    <text x="584" y="115">8</text>
+    <text x="720" y="115">10</text>
+  </g>
+
+  <!-- bucket labels -->
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="10.5" fill="#57606a" text-anchor="middle">
+    <text x="108" y="134">Hand-Crafted</text>
+    <text x="244" y="134">Human-Focused</text>
+    <text x="380" y="134">Balanced</text>
+    <text x="516" y="134">AI-Assisted</text>
+    <text x="652" y="134">AI-Heavy</text>
+  </g>
+
+  <!-- exact bucket colors used for the badge -->
+  <g font-family="Consolas, Menlo, monospace" font-size="9.5" fill="#8b949e" text-anchor="middle">
+    <text x="108" y="150">#27ae60</text>
+    <text x="244" y="150">#1abc9c</text>
+    <text x="380" y="150">#3498db</text>
+    <text x="516" y="150">#6c5ce7</text>
+    <text x="652" y="150">#8a2be2</text>
+  </g>
+</svg>
