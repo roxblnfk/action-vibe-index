@@ -21,20 +21,16 @@ function validateCoAuthorMultiplier(multiplier) {
   return num;
 }
 
-function validateAIKeywords(keywords) {
+function validateExtraKeywords(keywords) {
+  // Optional: these are merged on top of the built-in AI signatures, so an
+  // empty value is valid and simply means "use the built-in list only".
   if (!keywords || typeof keywords !== 'string') {
-    throw new Error('ai-keywords must be a string');
+    return [];
   }
-  const keywordList = keywords
+  return keywords
     .split(',')
     .map(k => k.trim())
     .filter(k => k.length > 0);
-
-  if (keywordList.length === 0) {
-    throw new Error('ai-keywords must contain at least one keyword');
-  }
-
-  return keywordList;
 }
 
 function validateBadgeStyle(style) {
@@ -150,7 +146,7 @@ function validateAllInputs(inputs) {
   try {
     validated.commitsCount = validateCommitsCount(inputs.commitsCount);
     validated.coAuthorMultiplier = validateCoAuthorMultiplier(inputs.coAuthorMultiplier);
-    validated.aiKeywords = validateAIKeywords(inputs.aiKeywords);
+    validated.extraKeywords = validateExtraKeywords(inputs.extraKeywords);
     validated.badgeStyle = validateBadgeStyle(inputs.badgeStyle);
     validated.badgeColor = validateBadgeColor(inputs.badgeColor);
     validated.assertIndex = validateAssertIndex(inputs.assertIndex);
@@ -174,7 +170,7 @@ function validateAllInputs(inputs) {
 module.exports = {
   validateCommitsCount,
   validateCoAuthorMultiplier,
-  validateAIKeywords,
+  validateExtraKeywords,
   validateBadgeStyle,
   validateBadgeColor,
   validateAssertIndex,

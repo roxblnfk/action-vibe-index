@@ -10,7 +10,7 @@ const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const {
   validateCommitsCount,
   validateCoAuthorMultiplier,
-  validateAIKeywords,
+  validateExtraKeywords,
   validateBadgeStyle,
   validateBadgeColor,
   validateAssertIndex,
@@ -37,8 +37,8 @@ function approx(actual, expected, name) {
   assert.ok(Math.abs(actual - expected) < 1e-9, `${name}: expected ${expected}, got ${actual}`);
 }
 
-const DEFAULT_KEYWORDS = ['Claude', 'GPT', 'AI', 'Agent'];
-const matchers = buildKeywordMatchers(DEFAULT_KEYWORDS);
+// Built-in signatures only (no user extras).
+const matchers = buildKeywordMatchers();
 
 console.log('calculator');
 
@@ -155,6 +155,36 @@ test('human co-author is not treated as AI', () => {
   assert.strictEqual(r.classification, 'human');
 });
 
+console.log('ai-signatures (built-in list)');
+
+test('built-in signatures detect known agents', () => {
+  for (const msg of ['Generated with Copilot', 'cursor agent edit', 'gpt-4o draft', 'OpenAI Codex run']) {
+    const r = classifyCommit({ message: msg, added: 1, removed: 0 }, matchers);
+    assert.strictEqual(r.classification, 'ai', `expected AI for: ${msg}`);
+  }
+});
+
+test('built-in [bot] signature detects app bot co-authors', () => {
+  const message = 'chore: bump deps\n\nCo-Authored-By: dependabot[bot] <support@github.com>';
+  const r = classifyCommit({ message, added: 3, removed: 1 }, matchers);
+  assert.strictEqual(r.classification, 'co-authored');
+});
+
+test('built-in anthropic email signature detects AI co-author', () => {
+  const message = 'feat: x\n\nCo-Authored-By: Some Name <noreply@anthropic.com>';
+  const r = classifyCommit({ message, added: 1, removed: 0 }, matchers);
+  assert.strictEqual(r.classification, 'co-authored');
+});
+
+test('extra-ai-keywords extend the built-in list', () => {
+  const base = classifyCommit({ message: 'work by Frobnicator', added: 1, removed: 0 }, matchers);
+  assert.strictEqual(base.classification, 'human');
+
+  const extended = buildKeywordMatchers(['Frobnicator']);
+  const r = classifyCommit({ message: 'work by Frobnicator', added: 1, removed: 0 }, extended);
+  assert.strictEqual(r.classification, 'ai');
+});
+
 console.log('updater.replaceBadge');
 
 const NEW_BADGE = '![Vibe Index](https://img.shields.io/static/v1?label=Vibe%20Index&message=6.9%2F10.0&color=3498db&style=flat-square)';
@@ -208,9 +238,10 @@ test('co-author-multiplier bounds', () => {
   assert.throws(() => validateCoAuthorMultiplier('-0.1'));
 });
 
-test('ai-keywords splitting', () => {
-  assert.deepStrictEqual(validateAIKeywords('Claude, GPT ,AI'), ['Claude', 'GPT', 'AI']);
-  assert.throws(() => validateAIKeywords(' , '));
+test('extra-ai-keywords splitting (empty is allowed)', () => {
+  assert.deepStrictEqual(validateExtraKeywords('Copilot, Cursor ,Devin'), ['Copilot', 'Cursor', 'Devin']);
+  assert.deepStrictEqual(validateExtraKeywords(''), []);
+  assert.deepStrictEqual(validateExtraKeywords(' , '), []);
 });
 
 test('badge-style allow-list', () => {
@@ -244,7 +275,7 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   const result = validateAllInputs({
     commitsCount: '10',
     coAuthorMultiplier: '0.5',
-    aiKeywords: 'Claude',
+    extraKeywords: 'Copilot',
     badgeStyle: 'flat',
     badgeColor: 'blue',
     badgeLogo: 'github',
@@ -256,6 +287,7 @@ test('validateAllInputs passes through badge-output-file (regression)', () => {
   assert.strictEqual(result.success, true);
   assert.strictEqual(result.validated.badgeOutputFile, 'badge-url.txt');
   assert.strictEqual(result.validated.badgeLogo, 'github');
+  assert.deepStrictEqual(result.validated.extraKeywords, ['Copilot']);
   assert.deepStrictEqual(result.validated.updateFiles, ['README.md', 'CONTRIBUTING.md']);
 });
 

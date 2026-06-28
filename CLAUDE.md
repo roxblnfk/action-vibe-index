@@ -15,6 +15,7 @@ src/
   index.js                    # Entry point (runs in GitHub Actions)
   core.js                     # Dependency-free @actions/core shim (runner protocol)
   analyzer.js                 # Git repository analysis
+  ai-signatures.js            # Versioned, built-in AI/bot detection regexes
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
   updater.js                  # In-place README badge update (marker-based)
@@ -47,8 +48,14 @@ Analyzes commit history to determine human vs AI authorship.
   separators make parsing unambiguous; no per-commit `git show`)
 - `classifyCommit(commit, matchers)` - Classifies one commit as
   `human` / `ai` / `co-authored`
-- `buildKeywordMatchers(keywords)` - Compiles word-boundary, case-insensitive
-  regexes for each keyword
+- `buildKeywordMatchers(extraKeywords)` - Returns the built-in `AI_SIGNATURES`
+  (from `ai-signatures.js`) plus the user's extra keywords compiled to
+  word-boundary, case-insensitive regexes
+
+**Built-in signatures (`ai-signatures.js`):** a curated, versioned list of
+regexes (Claude, GPT, Copilot, Cursor, Devin, Gemini, `[bot]`, vendor email
+domains, …) maintained with the action. Users extend — not replace — it via the
+`extra-ai-keywords` input.
 
 **AI Detection Logic (whole-word, case-insensitive):**
 - Co-authored (checked first): a `Co-Authored-By:` trailer naming an AI keyword
@@ -111,7 +118,7 @@ Orchestrates the analysis and outputs results.
 |-----------|------|---------|---------|
 | `commits-count` | Number | 500 | How many recent commits to analyze |
 | `co-author-multiplier` | Float (0-1) | 0.5 | Credit split for co-authored commits |
-| `ai-keywords` | String | Claude,GPT,AI,Agent | Keywords to detect AI authorship |
+| `extra-ai-keywords` | String | '' | Extra keywords merged on top of the built-in AI signatures |
 | `badge-style` | String | flat-square | shields.io style |
 | `badge-color` | String | 3498db | Badge color (hex); auto-picked from score when left at default |
 | `badge-logo` | String | '' | Optional logo (simple-icons slug) |
@@ -254,7 +261,7 @@ Tests verify:
 
 - Keep Node.js version updated with GitHub Actions LTS
 - Monitor shields.io API changes
-- Update AI keywords as new tools emerge
+- Update `src/ai-signatures.js` as new AI tools/bots emerge (bump "Last reviewed")
 - Collect user feedback on weighting formula
 
 ## License

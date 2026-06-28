@@ -19,9 +19,14 @@ The metric weighs:
 
 ### How it detects AI-authored code:
 
-1. **Direct AI authorship**: Commits with AI keywords in the message (`Claude`, `GPT`, `AI`, `Agent`, etc.)
-2. **Co-authored with AI**: Commits with `Co-Authored-By:` trailers mentioning AI
+1. **Direct AI authorship**: Commits whose message matches a built-in AI
+   signature (`Claude`, `GPT`, `Copilot`, `Cursor`, `Devin`, `Gemini`, `[bot]`, …)
+2. **Co-authored with AI**: Commits with `Co-Authored-By:` trailers naming an AI
    - Applied with a configurable multiplier (0.0-1.0) to give partial credit to human developers
+
+The built-in signature list lives in [`src/ai-signatures.js`](src/ai-signatures.js)
+and is expanded in new releases. To detect tools specific to your team, add your
+own terms via `extra-ai-keywords` — they are merged on top of the built-in list.
 
 ## 🚀 Usage
 
@@ -35,7 +40,7 @@ Add this action to your workflow:
   with:
     commits-count: '500'
     co-author-multiplier: '0.5'
-    ai-keywords: 'Claude,GPT,AI,Agent'
+    extra-ai-keywords: 'Frobnicator,InternalBot'  # optional, on top of built-ins
     badge-style: 'flat-square'
 ```
 
@@ -119,7 +124,7 @@ Prevent merging if Vibe Index drops below a threshold:
 |-------|----------|---------|-------------|
 | `commits-count` | No | `500` | Number of recent commits to analyze |
 | `co-author-multiplier` | No | `0.5` | Multiplier for co-authored code (0.0-1.0) |
-| `ai-keywords` | No | `Claude,GPT,AI,Agent` | Comma-separated keywords to detect AI authorship |
+| `extra-ai-keywords` | No | `` | Extra comma-separated keywords merged on top of the built-in AI signatures |
 | `badge-style` | No | `flat-square` | Badge style: `flat`, `flat-square`, `plastic`, `for-the-badge`, `social` |
 | `badge-color` | No | `3498db` | Badge color (hex without `#` or color name). When left at the default, the color is picked automatically from the score |
 | `badge-logo` | No | `` | Optional logo (a [simple-icons](https://simpleicons.org) slug, e.g. `github`) |
@@ -224,12 +229,13 @@ Where:
 
 ### Custom Keywords
 
-Detect additional AI patterns:
+The built-in signatures already cover the common tools. Use `extra-ai-keywords`
+only to add terms specific to your team (they are merged with the built-in list):
 
 ```yaml
 - uses: roxblnfk/vibe-index@v1
   with:
-    ai-keywords: 'Claude,GPT,ChatGPT,GitHub Copilot,Gemini'
+    extra-ai-keywords: 'AcmeAgent,InternalLLM'
 ```
 
 ### Strict Quality Gate

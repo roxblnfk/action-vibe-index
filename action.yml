@@ -13,10 +13,10 @@ inputs:
     required: false
     default: '0.5'
 
-  ai-keywords:
-    description: 'Keywords to detect AI authorship in co-author field (comma-separated, default: "Claude,GPT,AI,Agent")'
+  extra-ai-keywords:
+    description: 'Additional comma-separated keywords to detect AI authorship, merged on top of the built-in AI signatures (Claude, GPT, Copilot, Cursor, [bot], ...). Leave empty to use the built-in list only.'
     required: false
-    default: 'Claude,GPT,AI,Agent'
+    default: ''
 
   badge-style:
     description: 'Shield.io badge style (flat, flat-square, plastic, for-the-badge, social)'

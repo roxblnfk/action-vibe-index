@@ -13,7 +13,7 @@ async function run() {
     const rawInputs = {
       commitsCount: core.getInput('commits-count') || '500',
       coAuthorMultiplier: core.getInput('co-author-multiplier') || '0.5',
-      aiKeywords: core.getInput('ai-keywords') || 'Claude,GPT,AI,Agent',
+      extraKeywords: core.getInput('extra-ai-keywords'),
       badgeStyle: core.getInput('badge-style') || 'flat-square',
       badgeColor: core.getInput('badge-color') || DEFAULT_BADGE_COLOR,
       badgeLogo: core.getInput('badge-logo'),
@@ -32,7 +32,7 @@ async function run() {
     const {
       commitsCount,
       coAuthorMultiplier,
-      aiKeywords,
+      extraKeywords,
       badgeStyle,
       badgeColor,
       badgeLogo,
@@ -45,12 +45,12 @@ async function run() {
     core.info('Starting Vibe Index analysis...');
     core.info(`  Commits to analyze: ${commitsCount}`);
     core.info(`  Co-author multiplier: ${coAuthorMultiplier}`);
-    core.info(`  AI keywords: ${aiKeywords.join(', ')}`);
+    core.info(`  Extra AI keywords: ${extraKeywords.length ? extraKeywords.join(', ') : '(none)'}`);
 
     const analysis = await analyzeRepository({
       commitsCount,
       coAuthorMultiplier,
-      aiKeywords,
+      extraKeywords,
     });
 
     const { vibeIndex, metrics } = calculateVibeIndex(analysis);

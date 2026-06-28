@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- AI detection now uses a curated, versioned signature list in
+  `src/ai-signatures.js` (Claude, GPT, Copilot, Cursor, Devin, Gemini, `[bot]`,
+  vendor email domains, …). The `ai-keywords` input is renamed to
+  `extra-ai-keywords` and now **extends** the built-in list instead of replacing
+  it (default empty).
+
 ## [1.0.0] - 2026-06-28
 
 ### Added

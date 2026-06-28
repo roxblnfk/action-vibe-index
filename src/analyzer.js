@@ -1,4 +1,5 @@
 const { execFileSync } = require('child_process');
+const { AI_SIGNATURES } = require('./ai-signatures');
 
 // ASCII control characters used as field/record separators in `git log`
 // output. They never appear in commit messages or numstat lines, so parsing
@@ -12,14 +13,14 @@ const RECORD_SEP = '\x1e'; // Record Separator
  * @param {Object} options
  * @param {number} options.commitsCount - Number of commits to analyze
  * @param {number} options.coAuthorMultiplier - Share of credit given to AI in co-authored commits (0-1)
- * @param {string[]} options.aiKeywords - Keywords used to detect AI authorship
+ * @param {string[]} options.extraKeywords - User keywords merged on top of the built-in AI signatures
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzeRepository(options) {
-  const { commitsCount, coAuthorMultiplier, aiKeywords } = options;
+  const { commitsCount, coAuthorMultiplier, extraKeywords } = options;
 
   const commits = getRecentCommits(commitsCount);
-  const matchers = buildKeywordMatchers(aiKeywords);
+  const matchers = buildKeywordMatchers(extraKeywords);
 
   let totalLinesChanged = 0;
   let humanLinesChanged = 0;
@@ -156,18 +157,20 @@ function parseNumstat(numstat) {
 }
 
 /**
- * Build case-insensitive, word-boundary regexes for each AI keyword.
- * Word boundaries prevent false positives such as "AI" matching inside
+ * Build the full set of matchers: the curated, built-in AI signatures plus
+ * the user's extra keywords. User keywords are escaped and wrapped in word
+ * boundaries (case-insensitive), so "AI" matches the word "AI" but not
  * "available", "maintain" or "email".
  *
- * @param {string[]} keywords
+ * @param {string[]} [extraKeywords]
  * @returns {RegExp[]}
  */
-function buildKeywordMatchers(keywords) {
-  return keywords.map(keyword => {
+function buildKeywordMatchers(extraKeywords = []) {
+  const extras = extraKeywords.map(keyword => {
     const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp(`\\b${escaped}\\b`, 'i');
   });
+  return [...AI_SIGNATURES, ...extras];
 }
 
 /**
