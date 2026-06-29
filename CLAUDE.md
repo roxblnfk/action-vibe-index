@@ -5,7 +5,7 @@
 **Vibe Index** measures the ratio of human-written code to AI-generated/assisted
 code in a repository. It analyzes commit history and generates a visual badge for
 README files. It ships in two forms from one codebase: a **GitHub Action** and an
-**npx CLI** (`npx vibe-index [repo]`).
+**npx CLI** (`npx @roxblnfk/vibe-index [repo]`).
 
 ## Project Structure
 
@@ -142,7 +142,7 @@ analyzed without a prior checkout. Shared by the npx CLI and the action's
 - The token is redacted in all logs and error messages.
 
 #### 6. **bin/cli.js** - npx CLI Entry Point
-`npx vibe-index [source] [options]`. Reuses `src/` end to end. A local path is
+`npx @roxblnfk/vibe-index [source] [options]`. Reuses `src/` end to end. A local path is
 analyzed in place (`cwd`); an `owner/repo` shorthand or a URL is cloned via
 `repo.js` and cleaned up afterwards. Flags: `-c/--commits`,
 `-m/--co-author-multiplier`, `-p/--extra-bot-patterns` (repeatable), `--ref`,
@@ -321,17 +321,24 @@ Tests verify:
 
 ## Distribution (npm / npx)
 
-The same codebase is published to npm so it runs via `npx vibe-index`.
+The same codebase is published to npm as `@roxblnfk/vibe-index` (the unscoped
+`vibe-index` is blocked by npm as too similar to an existing `vibeindex`), so it
+runs via `npx @roxblnfk/vibe-index`.
 
-- `package.json` declares `"bin": { "vibe-index": "bin/cli.js" }` and a `"files"`
-  allow-list (`bin/`, `src/`, `action.yml`) so the published tarball stays lean.
+- `package.json` declares `"bin": { "vibe-index": "bin/cli.js" }` (the binary
+  keeps the short name) and a `"files"` allow-list (`bin/`, `src/`, `action.yml`)
+  so the published tarball stays lean.
 - Zero runtime dependencies — `npx` only downloads this package.
-- **Publishing** (maintainer): bump the version, then `npm publish` (or a CI
-  release workflow with an npm automation token in the `NPM_TOKEN` secret and
-  `npm publish --provenance`). The package name `vibe-index` must be available
-  on npm; otherwise publish under a scope (`@roxblnfk/vibe-index`, run via
-  `npx @roxblnfk/vibe-index`). The GitHub Action keeps using `roxblnfk/...@v1`
-  regardless — npm and the Action are independent distribution channels.
+- **Publishing** is automated: the release-please workflow runs
+  `npm publish --access public` on each release via **Trusted Publishing**
+  (GitHub OIDC, no stored token; provenance attached automatically). Scoped
+  packages need `--access public` to be public.
+- **First publish caveat:** npm has no "pending publisher", so a brand-new
+  package must be published once with a credential (an OTP `npm publish`, since
+  granular tokens can't *create* a package) before Trusted Publishing can be
+  configured on its settings page. Subsequent releases are token-free.
+- The GitHub Action keeps using `roxblnfk/...@v1` regardless — npm and the
+  Action are independent distribution channels.
 
 ## Dependencies
 

@@ -1,5 +1,5 @@
 {
-  "name": "vibe-index",
+  "name": "@roxblnfk/vibe-index",
   "version": "1.2.0",
   "description": "Measure the ratio of human-written vs AI-generated code in a git repository (CLI + GitHub Action)",
   "main": "src/index.js",

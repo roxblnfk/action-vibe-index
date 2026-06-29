@@ -110,13 +110,13 @@ package ships the same analyzer as the action:
 
 ```bash
 # the current repo
-npx vibe-index
+npx @roxblnfk/vibe-index
 
 # any GitHub repo (cloned shallowly to a temp dir, removed afterwards)
-npx vibe-index facebook/react
+npx @roxblnfk/vibe-index facebook/react
 
 # a full URL, a specific branch, and the badge URL
-npx vibe-index https://github.com/php/php-src --ref master --badge
+npx @roxblnfk/vibe-index https://github.com/php/php-src --ref master --badge
 ```
 
 ```text
@@ -126,7 +126,7 @@ Vibe Index: 5.0 / 10.0  (Balanced)
   Commits analyzed: 250
 ```
 
-Common options (`npx vibe-index --help` for the full list):
+Common options (`npx @roxblnfk/vibe-index --help` for the full list):
 
 | Option | Default | Purpose |
 |---|---|---|
