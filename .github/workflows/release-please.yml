@@ -7,6 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write  # npm provenance (signed attestation of where the package was built)
 
 jobs:
   release-please:
@@ -73,3 +74,20 @@ jobs:
           git tag -f "v${MAJOR}.${MINOR}" "${SHA}"
           git push --force origin "v${MAJOR}"
           git push --force origin "v${MAJOR}.${MINOR}"
+
+      # Publish the npx package to npm on every release via Trusted Publishing
+      # (GitHub OIDC): no long-lived token to store, and provenance is attached
+      # automatically. Requires id-token: write (above) and npm >= 11.5.1, which
+      # is newer than the npm bundled with Node, so npm is upgraded first.
+      - name: Set up Node for npm publish
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm (Trusted Publishing)
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          npm install -g npm@latest
+          npm publish --access public
