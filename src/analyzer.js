@@ -14,12 +14,13 @@ const RECORD_SEP = '\x1e'; // Record Separator
  * @param {number} options.commitsCount - Number of commits to analyze
  * @param {number} options.coAuthorMultiplier - Share of credit given to AI in co-authored commits (0-1)
  * @param {RegExp[]} options.extraPatterns - User regexes merged on top of the built-in bot signatures
+ * @param {string} [options.cwd] - Directory to run git in (defaults to the process cwd)
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzeRepository(options) {
-  const { commitsCount, coAuthorMultiplier, extraPatterns } = options;
+  const { commitsCount, coAuthorMultiplier, extraPatterns, cwd } = options;
 
-  const commits = getRecentCommits(commitsCount);
+  const commits = getRecentCommits(commitsCount, cwd);
   const matchers = buildMatchers(extraPatterns);
 
   let totalLinesChanged = 0;
@@ -79,9 +80,10 @@ async function analyzeRepository(options) {
  * reports no numstat for them by default.
  *
  * @param {number} count - Number of commits to fetch
+ * @param {string} [cwd] - Directory to run git in (defaults to the process cwd)
  * @returns {Array<{hash: string, author: string, message: string, added: number, removed: number}>}
  */
-function getRecentCommits(count) {
+function getRecentCommits(count, cwd) {
   let output;
   try {
     output = execFileSync(
@@ -93,7 +95,7 @@ function getRecentCommits(count) {
         '--numstat',
         `--format=${RECORD_SEP}%H${FIELD_SEP}%an <%ae>${FIELD_SEP}%B${FIELD_SEP}`,
       ],
-      { encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 }
+      { encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024, ...(cwd ? { cwd } : {}) }
     );
   } catch (error) {
     throw new Error(`Failed to get git commits: ${error.message}`);

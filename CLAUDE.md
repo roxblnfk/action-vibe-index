@@ -2,7 +2,10 @@
 
 ## Overview
 
-**Vibe Index** is a GitHub Action that measures the ratio of human-written code to AI-generated/assisted code in a repository. It analyzes commit history and generates a visual badge for README files.
+**Vibe Index** measures the ratio of human-written code to AI-generated/assisted
+code in a repository. It analyzes commit history and generates a visual badge for
+README files. It ships in two forms from one codebase: a **GitHub Action** and an
+**npx CLI** (`npx vibe-index [repo]`).
 
 ## Project Structure
 
@@ -11,10 +14,14 @@
   workflows/
     vibe-index.yml            # Updates the README badge and asserts the score
 
+bin/
+  cli.js                      # npx entry point (CLI); shares the src/ analyzer
+
 src/
-  index.js                    # Entry point (runs in GitHub Actions)
+  index.js                    # Action entry point (runs in GitHub Actions)
   core.js                     # Dependency-free @actions/core shim (runner protocol)
-  analyzer.js                 # Git repository analysis
+  analyzer.js                 # Git repository analysis (accepts an optional cwd)
+  repo.js                     # Clone a remote repo to a temp dir (CLI + fetch mode)
   bot-signatures.js           # Versioned, built-in bot/AI detection regexes
   calculator.js               # Vibe Index calculation logic
   badge.js                    # Badge URL generation (shields.io)
@@ -26,7 +33,7 @@ tests/
   test.js                     # Assertion-based test suite
 
 action.yml                    # GitHub Action definition
-package.json                  # Node.js dependencies
+package.json                  # npm metadata: "bin" (CLI), "files", zero deps
 README.md                     # User-facing documentation
 CLAUDE.md                     # This file
 LICENSE                       # BSD-3-Clause License
@@ -44,10 +51,11 @@ Analyzes commit history to determine human vs AI authorship.
   - Returns metrics about code lines and commits
   - Applies the co-author multiplier to both lines and commit authorship
 
-- `getRecentCommits(count)` - Fetches last N non-merge commits with author
+- `getRecentCommits(count, cwd)` - Fetches last N non-merge commits with author
   identity (`%an <%ae>`) and numstat in a single `git log --no-merges --numstat`
   call (control-character separators make parsing unambiguous; no per-commit
-  `git show`)
+  `git show`). `cwd` (optional) selects the directory git runs in, so the CLI
+  and the action's `fetch` mode can point it at a temp clone.
 - `classifyCommit(commit, matchers)` - Classifies one commit as
   `human` / `ai` / `co-authored` by matching identities
 - `buildMatchers(extraPatterns)` - Returns the built-in `BOT_SIGNATURES`
@@ -107,12 +115,40 @@ Orchestrates the analysis and outputs results.
 
 **Responsibilities:**
 - Reads GitHub Actions inputs
+- Optionally self-fetches the repo (`fetch: true`, see `repo.js`) instead of
+  relying on a prior `actions/checkout`; analysis then runs with `cwd` set to
+  the temp clone, which is removed in a `finally`
 - Calls analyzer
 - Calculates Vibe Index
 - Generates badge
 - Handles assertions
 - Sets GitHub Actions outputs
-- Updates badge in files, optionally commits/pushes them (before the assertion)
+- Updates badge in files, optionally commits/pushes them (before the assertion).
+  Skipped in `fetch` mode, which is read-only (the temp clone is discarded).
+
+#### 5. **repo.js** - Clone for analysis
+Clones a remote repository into a throwaway temp dir so its history can be
+analyzed without a prior checkout. Shared by the npx CLI and the action's
+`fetch` mode.
+
+- `cloneRepository(source, { depth, ref, token, log })` → `{ dir, cleanup }`.
+  Shallow (`--depth`, default sized to the analysis window), `--single-branch`,
+  **no** `--filter` (blobs must be local so `git log --numstat` never lazily
+  fetches over the network mid-analysis). `cleanup()` removes the temp tree.
+- `normalizeRepoUrl(source)` - expands an `owner/repo` shorthand to a GitHub
+  https URL; a full URL / local path passes through.
+- `authenticateUrl(url, token)` - injects `x-access-token:<token>@` into an
+  **https** URL for private clones (no-op for ssh/scp-like URLs or no token).
+- The token is redacted in all logs and error messages.
+
+#### 6. **bin/cli.js** - npx CLI Entry Point
+`npx vibe-index [source] [options]`. Reuses `src/` end to end. A local path is
+analyzed in place (`cwd`); an `owner/repo` shorthand or a URL is cloned via
+`repo.js` and cleaned up afterwards. Flags: `-c/--commits`,
+`-m/--co-author-multiplier`, `-p/--extra-bot-patterns` (repeatable), `--ref`,
+`--depth`, `--token` (defaults to `$GITHUB_TOKEN`/`$GH_TOKEN`), `--json`,
+`--badge`, `--no-clean`, `-h/--help`, `-v/--version`. Human output goes to
+stdout; progress/warnings to stderr (so `--json` stdout stays clean).
 
 ## Configuration
 
@@ -121,6 +157,10 @@ Orchestrates the analysis and outputs results.
 | Parameter | Type | Default | Purpose |
 |-----------|------|---------|---------|
 | `commits-count` | Number | 250 | How many recent commits to analyze |
+| `fetch` | Bool | false | Clone the repo itself (read-only) instead of using a prior checkout |
+| `repository` | String | '' | Repo to clone in `fetch` mode (`owner/repo` or URL); defaults to `$GITHUB_REPOSITORY` |
+| `ref` | String | '' | Branch/tag to clone in `fetch` mode; defaults to the repo default branch |
+| `token` | String | '' | Token for `fetch` clones; defaults to the `GITHUB_TOKEN` env var |
 | `co-author-multiplier` | Float (0-1) | 0.8 | Share of an AI co-authored commit credited to AI |
 | `extra-bot-patterns` | String | '' | Extra regexes (one per line) matched against identities, merged on top of the built-in signatures |
 | `badge-style` | String | flat-square | shields.io style |
@@ -279,10 +319,26 @@ Tests verify:
    - Slack notifications
    - Linear/Jira integration
 
+## Distribution (npm / npx)
+
+The same codebase is published to npm so it runs via `npx vibe-index`.
+
+- `package.json` declares `"bin": { "vibe-index": "bin/cli.js" }` and a `"files"`
+  allow-list (`bin/`, `src/`, `action.yml`) so the published tarball stays lean.
+- Zero runtime dependencies — `npx` only downloads this package.
+- **Publishing** (maintainer): bump the version, then `npm publish` (or a CI
+  release workflow with an npm automation token in the `NPM_TOKEN` secret and
+  `npm publish --provenance`). The package name `vibe-index` must be available
+  on npm; otherwise publish under a scope (`@roxblnfk/vibe-index`, run via
+  `npx @roxblnfk/vibe-index`). The GitHub Action keeps using `roxblnfk/...@v1`
+  regardless — npm and the Action are independent distribution channels.
+
 ## Dependencies
 
-- None at runtime. The action only uses Node.js built-ins plus the `git` CLI.
-- Node.js (provided by the `node24` action runtime; `git` must be available)
+- None at runtime. The action and CLI only use Node.js built-ins plus the `git`
+  CLI.
+- Node.js (provided by the `node24` action runtime, or `node >=20` for the CLI;
+  `git` must be available)
 
 ## Maintenance
 

@@ -9,6 +9,7 @@ const { generateBadgeUrl, generateBadgeMarkdown, generateBadgeHtml, resolveLogo 
 const { analyzeRepository, classifyCommit, buildMatchers, isShallowRepository } = require('../src/analyzer');
 const { replaceBadge, START_MARKER, END_MARKER } = require('../src/updater');
 const { commitChanges } = require('../src/committer');
+const { normalizeRepoUrl, authenticateUrl } = require('../src/repo');
 const {
   validateCommitsCount,
   validateCoAuthorMultiplier,
@@ -505,7 +506,61 @@ test('isShallowRepository distinguishes a full clone from a --depth=1 fetch', ()
   }
 });
 
+console.log('repo (clone helpers)');
+
+test('normalizeRepoUrl expands owner/repo shorthand, leaves URLs alone', () => {
+  assert.strictEqual(normalizeRepoUrl('octocat/Hello-World'), 'https://github.com/octocat/Hello-World.git');
+  assert.strictEqual(normalizeRepoUrl('  facebook/react  '), 'https://github.com/facebook/react.git');
+  assert.strictEqual(normalizeRepoUrl('https://gitlab.com/g/p.git'), 'https://gitlab.com/g/p.git');
+  assert.strictEqual(normalizeRepoUrl('git@github.com:o/r.git'), 'git@github.com:o/r.git');
+  // a local absolute path is not "owner/repo" shaped -> left untouched
+  assert.strictEqual(normalizeRepoUrl('/tmp/some/repo'), '/tmp/some/repo');
+});
+
+test('authenticateUrl injects a token into https only, no-op otherwise', () => {
+  assert.strictEqual(
+    authenticateUrl('https://github.com/o/r.git', 'secret'),
+    'https://x-access-token:secret@github.com/o/r.git'
+  );
+  // no token -> unchanged
+  assert.strictEqual(authenticateUrl('https://github.com/o/r.git'), 'https://github.com/o/r.git');
+  // ssh / scp-like is left untouched even with a token
+  assert.strictEqual(authenticateUrl('git@github.com:o/r.git', 'secret'), 'git@github.com:o/r.git');
+});
+
 console.log('validation');
+
+test('validateAllInputs parses the fetch-mode inputs', () => {
+  const result = validateAllInputs({
+    commitsCount: '10',
+    coAuthorMultiplier: '0.8',
+    extraPatterns: '',
+    badgeStyle: 'flat-square',
+    badgeColor: 'auto',
+    includeMessage: 'Vibe Index',
+    fetch: 'true',
+    repository: 'octocat/Hello-World',
+    ref: 'main',
+    token: 'abc',
+  });
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.validated.fetch, true);
+  assert.strictEqual(result.validated.repository, 'octocat/Hello-World');
+  assert.strictEqual(result.validated.ref, 'main');
+  assert.strictEqual(result.validated.token, 'abc');
+});
+
+test('fetch-mode inputs default to off / empty', () => {
+  const result = validateAllInputs({
+    commitsCount: '10', coAuthorMultiplier: '0.8', extraPatterns: '',
+    badgeStyle: 'flat-square', badgeColor: 'auto', includeMessage: 'Vibe Index',
+  });
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.validated.fetch, false);
+  assert.strictEqual(result.validated.repository, '');
+  assert.strictEqual(result.validated.ref, '');
+  assert.strictEqual(result.validated.token, '');
+});
 
 test('badge-discovery enum (default auto)', () => {
   assert.strictEqual(validateBadgeDiscovery(''), 'auto');
@@ -674,6 +729,33 @@ async function testAsync(name, fn) {
 }
 
 (async () => {
+  console.log('analyzer cwd (temp repo)');
+
+  await testAsync('analyzeRepository honors the cwd option (analyzes the temp repo, not this project)', async () => {
+    const dir = path.join(os.tmpdir(), 'vibe-cwd-test');
+    const git = args => execFileSync('git', args, { cwd: dir, encoding: 'utf-8' });
+    try {
+      fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 });
+      fs.mkdirSync(dir, { recursive: true });
+      git(['init', '-q']);
+      git(['config', 'user.email', 'human@example.com']);
+      git(['config', 'user.name', 'Test Human']);
+      fs.writeFileSync(path.join(dir, 'a.txt'), 'x\ny\n');
+      git(['add', '-A']);
+      git(['commit', '-qm', 'only commit']);
+
+      const analysis = await analyzeRepository({
+        commitsCount: 50, coAuthorMultiplier: 0.8, extraPatterns: [], cwd: dir,
+      });
+      // If cwd were ignored, it would analyze this AI-heavy project instead.
+      assert.strictEqual(analysis.totalCommits, 1, 'sees exactly the temp repo single commit');
+      assert.strictEqual(analysis.humanPercentage, 100);
+      assert.strictEqual(analysis.aiPercentage, 0);
+    } finally {
+      try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* ignore */ }
+    }
+  });
+
   console.log('property: index within bounds for any co-author-multiplier (real repo)');
 
   await testAsync('vibeIndex in [0,10] and shares in [0,100] across multipliers 0..1', async () => {

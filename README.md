@@ -103,6 +103,46 @@ on:
   workflow_dispatch:
 ```
 
+## 🖥️ Run it locally (`npx`)
+
+No workflow needed — score any repository straight from your terminal. The
+package ships the same analyzer as the action:
+
+```bash
+# the current repo
+npx vibe-index
+
+# any GitHub repo (cloned shallowly to a temp dir, removed afterwards)
+npx vibe-index facebook/react
+
+# a full URL, a specific branch, and the badge URL
+npx vibe-index https://github.com/php/php-src --ref master --badge
+```
+
+```text
+Vibe Index: 5.0 / 10.0  (Balanced)
+  AI code:     53.5%   |  Human code:    46.5%
+  AI commits:  43.6%   |  Human commits: 56.4%
+  Commits analyzed: 250
+```
+
+Common options (`npx vibe-index --help` for the full list):
+
+| Option | Default | Purpose |
+|---|---|---|
+| `-c, --commits <n>` | `250` | Commits to analyze |
+| `-m, --co-author-multiplier <f>` | `0.8` | AI share of a co-authored commit |
+| `-p, --extra-bot-patterns <re>` | — | Extra identity regex (repeatable) |
+| `--ref <branch>` | default branch | Branch/tag to clone (remote sources) |
+| `--depth <n>` | `commits + 50` | Clone depth (remote sources) |
+| `--token <token>` | `$GITHUB_TOKEN` | Token for private https clones |
+| `--json` | off | Machine-readable output |
+| `--badge` | off | Also print the badge URL & markdown |
+
+A local path is analyzed in place; an `owner/repo` shorthand or a URL is cloned
+to a temp dir and cleaned up when it's done. Private repos use `--token` or the
+`GITHUB_TOKEN` / `GH_TOKEN` environment variable.
+
 ## ⚙️ Configuration
 
 Every option with its default — keep only what you need:
@@ -141,7 +181,38 @@ Every option with its default — keep only what you need:
 
     # ─── quality gate ───
     assert-index: ''              # fail the run if the score is outside this range, e.g. '0.0-6.0' (≤ 60% AI)
+
+    # ─── self-fetch (skip actions/checkout) ───
+    fetch: false                  # clone the repo here instead of relying on a prior checkout (read-only)
+    repository: ''                # 'owner/repo' or a git URL; defaults to the current repository
+    ref: ''                       # branch/tag to clone; defaults to the repo default branch
+    token: ''                     # token for private clones; defaults to the GITHUB_TOKEN env var
 ```
+
+### Skip `actions/checkout` with `fetch: true`
+
+By default the action analyzes the repository checked out by a prior
+`actions/checkout` step (which needs `fetch-depth: 0`). Set `fetch: true` and it
+clones the repo itself — into a temp dir, scoped to the analysis window, removed
+afterwards — so a checkout step isn't needed at all:
+
+```yaml
+permissions:
+  contents: read
+steps:
+  - uses: roxblnfk/action-vibe-index@v1
+    with:
+      fetch: true            # no actions/checkout needed
+      update-files: ''       # read-only: just compute the score & badge URL
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # only needed for a private repo
+```
+
+`fetch` mode is **read-only**: it computes the score, the `badge-url` and the
+other outputs, but doesn't touch files or commit (the temp clone is discarded).
+Use it to score another repo (`repository: owner/other-repo`) or to comment the
+score on a PR without a checkout. To rewrite a README in place, use the default
+checkout-based flow.
 
 ### Outputs
 

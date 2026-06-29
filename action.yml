@@ -8,6 +8,26 @@ inputs:
     required: false
     default: '250'
 
+  fetch:
+    description: 'Clone the repository itself instead of relying on a prior actions/checkout step. When true, the action shallow-clones into a temp dir, analyzes it and cleans up. Read-only: update-files/commit are skipped in this mode. Uses the GITHUB_TOKEN env var for private repos.'
+    required: false
+    default: 'false'
+
+  repository:
+    description: 'Repository to clone when fetch is true, as "owner/repo" or a full git URL. Defaults to the current repository ($GITHUB_REPOSITORY).'
+    required: false
+    default: ''
+
+  ref:
+    description: 'Branch or tag to clone when fetch is true. Defaults to the cloned repo default branch.'
+    required: false
+    default: ''
+
+  token:
+    description: 'Token for authenticated clones when fetch is true. Defaults to the GITHUB_TOKEN environment variable. Needed only for private repositories.'
+    required: false
+    default: ''
+
   co-author-multiplier:
     description: 'Multiplier for co-authored code (0.0 to 1.0, default: 0.8) — share of an AI co-authored commit credited to AI'
     required: false

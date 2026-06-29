@@ -1,14 +1,24 @@
 {
   "name": "vibe-index",
   "version": "1.1.0",
-  "description": "GitHub Action to measure the ratio of human-written vs AI-generated code",
+  "description": "Measure the ratio of human-written vs AI-generated code in a git repository (CLI + GitHub Action)",
   "main": "src/index.js",
+  "bin": {
+    "vibe-index": "bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "action.yml"
+  ],
   "scripts": {
-    "test": "node tests/test.js"
+    "test": "node tests/test.js",
+    "vibe-index": "node bin/cli.js"
   },
   "keywords": [
     "github",
     "action",
+    "cli",
     "ai",
     "code-analysis",
     "vibe-index",
@@ -16,6 +26,14 @@
   ],
   "author": "Aleksei Gagarin",
   "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roxblnfk/action-vibe-index.git"
+  },
+  "homepage": "https://github.com/roxblnfk/action-vibe-index#readme",
+  "bugs": {
+    "url": "https://github.com/roxblnfk/action-vibe-index/issues"
+  },
   "engines": {
     "node": ">=20"
   }

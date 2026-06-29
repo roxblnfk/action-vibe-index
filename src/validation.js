@@ -193,6 +193,10 @@ function validateAllInputs(inputs) {
 
   try {
     validated.commitsCount = validateCommitsCount(inputs.commitsCount);
+    validated.fetch = validateBoolean('fetch', inputs.fetch);
+    validated.repository = validateNonEmpty(inputs.repository, '');
+    validated.ref = validateNonEmpty(inputs.ref, '');
+    validated.token = validateNonEmpty(inputs.token, '');
     validated.coAuthorMultiplier = validateCoAuthorMultiplier(inputs.coAuthorMultiplier);
     validated.extraPatterns = validateExtraPatterns(inputs.extraPatterns);
     validated.badgeStyle = validateBadgeStyle(inputs.badgeStyle);
